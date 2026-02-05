@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Trade - Professional Crypto Trading Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --neon-blue: #3b82f6;
+            --neon-cyan: #06b6d4;
+            --dark-bg: #0f172a;
+            --dark-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-gray: #94a3b8;
+            --accent-orange: #f59e0b;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+        }
+
+        /* Light mode variables */
+        .light-mode {
+            --dark-bg: #ffffff;
+            --dark-card: #f8fafc;
+            --text-light: #1e293b;
+            --text-gray: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            background: var(--dark-bg);
+            color: var(--text-light);
+        }
+
+        .light-mode {
+            background: #ffffff;
+            color: #1e293b;
+        }
+
+        .light-mode .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .light-mode .market-section {
+            background: #f8fafc;
+        }
+
+        .light-mode .about-section {
+            background: #ffffff;
+        }
+
+        .light-mode .features-section {
+            background: #ffffff;
+        }
+
+        .light-mode .testimonials-section {
+            background: #f8fafc;
+        }
+
+        .light-mode .newsletter-section {
+            background: #ffffff;
+        }
+
+        .light-mode .faq-section {
+            background: #f8fafc;
+        }
+
+        .light-mode .footer {
+            background: #ffffff;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .light-mode .dropdown .btn {
+            color: #000;
+            border-color: #000;
+        }
+
+        .light-mode .dropdown-menu {
+            background: #ffffff;
+            color: #000;
+        }
+
+        /* Header Styles */
+        .navbar {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--neon-blue) !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+
+        .nav-link {
+            color: var(--text-light) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: var(--neon-cyan) !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            color: white;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 1rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--neon-blue);
+            color: white;
+            transform: rotate(180deg);
+        }
+
+        /* Hero Section with Slide Images */
+        .hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            position: relative;
+            padding: 150px 0 100px;
+            overflow: hidden;
+        }
+
+        .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+
+        .hero-slide.active {
+            opacity: 0.3;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
+            animation: gradientShift 8s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-light), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-cta {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-cta:hover::before {
+            left: 100%;
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+            color: white;
+        }
+
+        /* Market Prices Section */
+        .market-section {
+            padding: 80px 0;
+            background: var(--dark-card);
+        }
+
+        .market-card {
+            background: var(--dark-bg);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+        }
+
+        .market-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.2);
+            border-color: var(--neon-blue);
+        }
+
+        .market-support-card {
+            text-align: center;
+            padding: 1.25rem 1rem;
+        }
+
+        .market-support-flag {
+            width: 48px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            border-radius: 6px;
+            object-fit: cover;
+            filter: drop-shadow(0 6px 12px rgba(59, 130, 246, 0.25));
+        }
+
+        .market-support-text {
+            color: var(--text-gray);
+            margin-top: 1rem;
+        }
+
+        .crypto-symbol {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .crypto-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        .price-change.positive {
+            color: var(--success-green);
+        }
+
+        .price-change.negative {
+            color: var(--danger-red);
+        }
+
+        /* Fix text-muted to white */
+        .text-muted {
+            color: white !important;
+        }
+
+        .light-mode .text-muted {
+            color: #64748b !important;
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 80px 0;
+            background: var(--dark-bg);
+        }
+
+        .about-section .about-text {
+            max-width: 800px;
+            margin: 0 auto;
+            color: var(--text-gray);
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+            background: var(--dark-bg);
+        }
+
+        .feature-card {
+            background: var(--dark-card);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(6, 182, 212, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .feature-description {
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 80px 0;
+            background: var(--dark-card);
+        }
+
+        .testimonial-card {
+            background: var(--dark-bg);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.2);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: var(--text-gray);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .author-info h5 {
+            margin: 0;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .author-info .rating {
+            color: var(--accent-orange);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary-blue), var(--neon-blue));
+            text-align: center;
+        }
+
+        /* Newsletter Section */
+        .newsletter-section {
+            padding: 80px 0;
+            background: var(--dark-bg);
+        }
+
+        .newsletter-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 25px;
+            background: var(--dark-card);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .newsletter-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .newsletter-btn {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .newsletter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 80px 0;
+            background: var(--dark-card);
+        }
+
+        .faq-item {
+            background: var(--dark-bg);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-item.active .faq-question {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .faq-divider {
+            text-align: center;
+            color: var(--text-gray);
+            margin: 1rem 0;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-bg);
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 60px 0 30px;
+        }
+
+        .footer-section h5 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .app-badges {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .app-badge {
+            background: var(--dark-card);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .app-badge:hover {
+            border-color: var(--neon-blue);
+            transform: translateY(-2px);
+            color: var(--text-light);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            margin-top: 2rem;
+            padding-top: 2rem;
+            text-align: center;
+            color: var(--text-gray);
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--text-light), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+            }
+            
+            .app-badges {
+                flex-direction: column;
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+        }
+
+        /* Contact Modal */
+        .modal-content {
+            background: var(--dark-card);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 15px;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .modal-title {
+            color: var(--text-light);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        .form-control {
+            background: var(--dark-bg);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--text-light);
+        }
+
+        .form-control:focus {
+            background: var(--dark-bg);
+            border-color: var(--neon-blue);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        }
+
+        .form-label {
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#home">
+                <img id="brand-logo" src="img/logo4x2.png" alt="CoinTrade Logo">
+                <span id="brand-text" style="display: none;">CoinTrade</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="#home" data-translate="nav_home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#markets" data-translate="nav_markets">Markets</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about" data-translate="nav_about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq" data-translate="nav_faq">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact" onclick="openContactModal()" data-translate="nav_contact">Contact</a></li>
+                </ul>
+                
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" id="langDropdown" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe"></i> <span id="current-lang">EN | USD</span>
+                        </button>
+                        <ul class="dropdown-menu" id="lang-menu">
+                            <li><a class="dropdown-item" href="#" data-lang="en" data-currency="usd">EN | USD</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="fr" data-currency="cad">FR | CAD</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="es" data-currency="eur">ES | EUR</a></li>
+                        </ul>
+                    </div>
+                    
+                    <a href="dashbord_user.html" class="btn-login me-3">Login</a>
+                    
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Sliding Images -->
+    <section id="home" class="hero">
+        <div class="hero-slider">
+            <div class="hero-slide active" style="background-image: url('slide_image_1.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('slide_image_2.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('slide_image_3.jpg');"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content fade-in-up">
+                <h1 id="hero-heading" data-translate="hero_heading">Start Trading Crypto with Confidence</h1>
+                <p id="hero-subtext" data-translate="hero_subtext">Join Coin Trade and explore fast, secure, and global crypto trading. Experience the future of digital finance with our cutting-edge platform.</p>
+                <a href="dashbord_user.html" class="btn-cta" id="start-trading-btn" data-translate="start_trading">Start Trading</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Market Prices -->
+    <section id="markets" class="market-section">
+        <div class="container">
+            <h2 class="section-title" id="live-market-title" data-translate="live_market_prices">Live Market Prices</h2>
+            <div class="row justify-content-center mb-3">
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="market-card market-support-card">
+                        <img class="market-support-flag" src="https://flagcdn.com/w80/ca.png" alt="Canada flag" loading="lazy">
+                        <div class="crypto-symbol">Canada</div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="market-card market-support-card">
+                        <img class="market-support-flag" src="https://flagcdn.com/w80/au.png" alt="Australia flag" loading="lazy">
+                        <div class="crypto-symbol">Australia</div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="market-card market-support-card">
+                        <img class="market-support-flag" src="https://flagcdn.com/w80/gb.png" alt="United Kingdom flag" loading="lazy">
+                        <div class="crypto-symbol">United Kingdom</div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="market-card market-support-card">
+                        <img class="market-support-flag" src="https://flagcdn.com/w80/eu.png" alt="European Union flag" loading="lazy">
+                        <div class="crypto-symbol">European Union</div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-6">
+                    <div class="market-card market-support-card">
+                        <img class="market-support-flag" src="https://flagcdn.com/w80/ch.png" alt="Switzerland flag" loading="lazy">
+                        <div class="crypto-symbol">Switzerland</div>
+                    </div>
+                </div>
+            </div>
+            <p class="section-subtitle market-support-text">
+                Coin Trade supports most countries worldwide, including Canada, Australia, the United Kingdom, the European Union, and Switzerland.
+            </p>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="market-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="crypto-symbol" data-coin="bitcoin">BTC/USDT</div>
+                                <div class="crypto-price" id="price-bitcoin">$43,250.00</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="price-change positive">+2.45%</div>
+                                <small class="text-muted">Vol: 1.2B</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="market-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="crypto-symbol" data-coin="ethereum">ETH/USDT</div>
+                                <div class="crypto-price" id="price-ethereum">$2,680.50</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="price-change positive">+1.82%</div>
+                                <small class="text-muted">Vol: 850M</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="market-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="crypto-symbol" data-coin="cardano">ADA/USDT</div>
+                                <div class="crypto-price" id="price-cardano">$0.4820</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="price-change negative">-0.95%</div>
+                                <small class="text-muted">Vol: 320M</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="market-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="crypto-symbol" data-coin="solana">SOL/USDT</div>
+                                <div class="crypto-price" id="price-solana">$98.75</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="price-change positive">+3.21%</div>
+                                <small class="text-muted">Vol: 450M</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container text-center">
+            <h2 class="section-title" data-translate="about_title">About Us</h2>
+            <p class="section-subtitle about-text">
+                At CoinTrade.ca, we offer a unique platform that combines live
+                market trading with continuous education in the world of
+                cryptocurrencies. Our primary goal is to empower users to
+                understand market dynamics and make informed investment
+                decisions through high-quality educational content, alongside
+                providing up-to-date and real trading tools.
+            </p>
+            <p class="section-subtitle about-text">
+                We believe education is the key to sustainable success in
+                digital markets, which is why we emphasize learning as a core
+                pillar of your journey with us, while ensuring a safe and
+                realistic trading experience.
+            </p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="section-title" data-translate="why_choose_title">Why Choose Coin Trade?</h2>
+            <p class="section-subtitle">Experience the most advanced crypto trading platform with industry-leading features and security.</p>
+            
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4 class="feature-title">High Security</h4>
+                        <p class="feature-description">Bank-level security with multi-layer encryption, cold storage, and advanced fraud detection to keep your assets safe.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4 class="feature-title">Fast Transactions</h4>
+                        <p class="feature-description">Lightning-fast order execution with minimal latency. Trade at the speed of thought with our optimized infrastructure.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <h4 class="feature-title">Multi-Currency Support</h4>
+                        <p class="feature-description">Trade over 200+ cryptocurrencies with support for major fiat currencies and stablecoins.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h4 class="feature-title">24/7 Customer Support</h4>
+                        <p class="feature-description">Round-the-clock support from our expert team. Get help whenever you need it through live chat, email, or phone.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4 class="feature-title">iOS & Android App</h4>
+                        <p class="feature-description">Trade on the go with our feature-rich mobile apps. Available on both iOS and Android with full functionality.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="feature-title">Advanced Analytics</h4>
+                        <p class="feature-description">Professional trading tools with real-time charts, technical indicators, and market analysis to make informed decisions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title" data-translate="testimonials_title">What Our Users Say</h2>
+            <p class="section-subtitle">Join thousands of satisfied traders who trust Coin Trade for their crypto investments.</p>
+            
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "Coin Trade has revolutionized my trading experience. The platform is incredibly fast and the security features give me peace of mind."
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">JD</div>
+                            <div class="author-info">
+                                <h5>John Davis</h5>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "The best crypto exchange I've used. Low fees, great customer support, and an intuitive interface that makes trading a breeze."
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">SM</div>
+                            <div class="author-info">
+                                <h5>Sarah Miller</h5>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "I've been trading on Coin Trade for over a year now. The advanced charting tools and real-time data are exactly what I need as a professional trader."
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">MR</div>
+                            <div class="author-info">
+                                <h5>Michael Rodriguez</h5>
+                                <div class="rating">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+        <div class="container text-center">
+            <h2 class="section-title" style="color: white;" data-translate="cta_title">Create Your Free Account Today</h2>
+            <p class="section-subtitle" style="color: rgba(255,255,255,0.8);">Join millions of users worldwide and start your crypto trading journey with Coin Trade.</p>
+            <a href="dashbord_user.html" class="btn-cta" data-translate="cta_button">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section id="newsletter" class="newsletter-section">
+        <div class="container text-center">
+            <h2 class="section-title" data-translate="newsletter_title">Stay Updated</h2>
+            <p class="section-subtitle">Subscribe to get the latest news, market updates, and exclusive trading insights delivered to your inbox.</p>
+
+            <form class="newsletter-form">
+                <input type="email" class="newsletter-input" placeholder="Enter your email address" data-translate-placeholder="newsletter_placeholder" required>
+                <button type="submit" class="newsletter-btn" data-translate="newsletter_button">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <h2 class="section-title" data-translate="faq_title">Frequently Asked Questions – C-Trade.ca</h2>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>1. What is CoinTrade.ca?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            CoinTrade.ca is a platform that combines live market trading with specialized education in cryptocurrencies, providing you with the knowledge and tools needed to make informed investment decisions.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>2. Can I trade directly on the platform?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, the platform offers live market trading along with comprehensive educational support to help you understand market mechanics and improve your skills.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>3. Do you provide educational content?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, we offer courses and training resources covering trading basics, technical analysis, risk management, and more.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>4. Is trading safe on the platform?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We adhere to the highest security standards and user data protection measures to ensure a safe and reliable trading environment.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>5. Do you provide personalized investment advice?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            No. Our platform focuses on education and empowering users to make their own decisions. We always recommend consulting independent financial experts before making investment choices.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>6. Are there fees to use the platform?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            We offer both free services and paid options including educational courses and advanced trading tools. Please check our Pricing page for more details.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>7. How do I get started?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Create a new account by clicking the “Sign Up” button, then access trading tools and educational content to begin your journey.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>8. Can I try the platform before committing?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            Yes, we provide a demo educational version allowing you to explore the content and trading tools before full subscription.
+                        </div>
+                    </div>
+                    <div class="faq-divider">⸻</div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>9. How can I contact support?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            You can reach us anytime via email at support@C-Trade.ca. We’re here to help!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5>Coin Trade</h5>
+                    <p class="text-muted">Canada's leading cryptocurrency trading platform. Trade with confidence, security, and speed.</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <div class="footer-section">
+                        <h5>Quick Links</h5>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#markets">Markets</a></li>
+                            <li><a href="#about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <div class="footer-section">
+                        <h5>Support</h5>
+                        <ul>
+                            <li><a href="#faq">FAQ</a></li>
+                            <li><a href="#contact" onclick="openContactModal()">Contact</a></li>
+                            <li><a href="#contact" onclick="openContactModal()">Help Center</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <div class="footer-section">
+                        <h5>Legal</h5>
+                        <ul>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#cookieModal">Cookie Policy</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#complianceModal">Compliance</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <div class="footer-section">
+                        <h5>Download App</h5>
+                        <div class="app-badges">
+                            <a href="#" class="app-badge">
+                                <i class="fab fa-apple"></i>
+                                <span>App Store</span>
+                            </a>
+                        </div>
+                        <div class="app-badges">
+                            <a href="#" class="app-badge">
+                                <i class="fab fa-google-play"></i>
+                                <span>Google Play</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Coin Trade LTD. All rights reserved. | Official website: <a href="https://c-trade.ca">c-trade.ca</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Contact Modal -->
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">Contact Us</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Get in Touch</h6>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="contactName" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="contactName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactSubject" class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="contactSubject" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactMessage" class="form-label">Message</label>
+                                    <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Send Message</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Contact Information</h6>
+                            <div class="mb-3">
+                                <i class="fas fa-envelope me-2"></i>
+                                <strong>Email:</strong> support@c-trade.ca
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-phone me-2"></i>
+                                <strong>Phone:</strong> +1 418 800 1329
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <strong>Address:</strong> 123 Bay Street, Toronto, ON M5J 2N8, Canada
+                                <div><strong>Switzerland:</strong> Bahnhofstrasse 10, 8001 Zurich, Switzerland</div>
+                                <div><strong>United Kingdom:</strong> 221B Baker Street, London NW1 6XE, United Kingdom</div>
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Support Hours:</strong> 24/7
+                            </div>
+                            <hr>
+                            <h6 class="mb-3">Follow Us</h6>
+                            <div class="social-icons">
+                                <a href="#" class="social-icon me-2"><i class="fab fa-telegram"></i></a>
+                                <a href="#" class="social-icon me-2"><i class="fab fa-twitter"></i></a>
+                                <a href="#" class="social-icon me-2"><i class="fab fa-linkedin"></i></a>
+                                <a href="#" class="social-icon me-2"><i class="fab fa-discord"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legal Modals -->
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Privacy Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Last updated:</strong> August 3, 2025</p>
+                    <p>CoinTrade.ca (“we,” “us,” or “our”) is committed to protecting your privacy and respecting your personal information. This Privacy Policy explains how we collect, use, and safeguard the information you provide when using our website and services.</p>
+                    <hr>
+                    <h6>1. Information We Collect</h6>
+                    <p>We collect the following types of information when you use our services:</p>
+                    <ul>
+                        <li><strong>Personal Information:</strong> Such as your full name, email address, phone number, residential address, date of birth, and other data you provide during registration or use of services.</li>
+                        <li><strong>Account Information:</strong> Login credentials, username, password, and account activity.</li>
+                        <li><strong>Usage Data:</strong> Information about how you use our website and services, including pages visited, time spent, and IP addresses.</li>
+                        <li><strong>Technical Data:</strong> Browser type, operating system, and device information.</li>
+                        <li><strong>Cookies:</strong> We use cookies to enhance user experience and analyze site usage.</li>
+                    </ul>
+                    <hr>
+                    <h6>2. How We Use Information</h6>
+                    <p>We use the collected information for the following purposes:</p>
+                    <ul>
+                        <li>To provide, operate, and improve our services.</li>
+                        <li>To verify your identity and secure your account.</li>
+                        <li>To communicate with you regarding your account, service updates, and promotional offers.</li>
+                        <li>To comply with legal and regulatory requirements.</li>
+                        <li>To analyze site usage and improve user experience.</li>
+                    </ul>
+                    <hr>
+                    <h6>3. Information Sharing</h6>
+                    <p>We do not sell or share your personal information with third parties for marketing purposes without your consent. We may share your data with:</p>
+                    <ul>
+                        <li>Trusted service providers who assist us in operating our platform (under confidentiality agreements).</li>
+                        <li>Legal and regulatory authorities when required by law or to comply with legal processes.</li>
+                        <li>In the event of a merger, acquisition, or sale of assets, your information may be transferred to the new entity.</li>
+                    </ul>
+                    <hr>
+                    <h6>4. Data Retention</h6>
+                    <p>We retain your personal data as long as necessary to provide our services and comply with legal obligations. When no longer needed, data is securely deleted or anonymized.</p>
+                    <hr>
+                    <h6>5. Data Security</h6>
+                    <p>We implement appropriate technical and organizational measures to protect your data against unauthorized access, alteration, disclosure, or destruction.</p>
+                    <hr>
+                    <h6>6. Your Rights</h6>
+                    <p>Under Canadian laws, you have the right to:</p>
+                    <ul>
+                        <li>Access and correct your personal data.</li>
+                        <li>Request deletion of your data.</li>
+                        <li>Object to certain data processing.</li>
+                        <li>Withdraw consent at any time, noting that this may affect our ability to provide services.</li>
+                    </ul>
+                    <p>To exercise your rights, please contact us at: <a href="mailto:privacy@C-Trade.ca">privacy@C-Trade.ca</a></p>
+                    <hr>
+                    <h6>7. Cookies</h6>
+                    <p>We use cookies to improve website performance and personalize content. You can manage cookie settings through your browser, but disabling cookies may affect your experience.</p>
+                    <hr>
+                    <h6>8. Children’s Privacy</h6>
+                    <p>Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from minors.</p>
+                    <hr>
+                    <h6>9. Changes to This Privacy Policy</h6>
+                    <p>We may update this Privacy Policy from time to time. Significant changes will be communicated via our website or email notifications.</p>
+                    <hr>
+                    <h6>10. Contact Us</h6>
+                    <p>If you have any questions or concerns about this Privacy Policy, please contact us at: <a href="mailto:privacy@C-Trade.ca">privacy@C-Trade.ca</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms of Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Last updated:</strong> August 3, 2025</p>
+
+                    <p>Welcome to CoinTrade.ca! Please read these Terms of Service (“Terms”, “Terms of Service”) carefully before using the CoinTrade.ca website (the “Service”) operated by CoinTrade.ca (“us”, “we”, or “our”).</p>
+
+                    <p>By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.</p>
+
+                    <hr>
+
+                    <p><strong>1. Eligibility</strong></p>
+                    <p>You must be at least 18 years old and have the legal capacity to enter into binding agreements under Canadian law to use our Service. By using CoinTrade.ca, you represent and warrant that you meet these requirements.</p>
+
+                    <p><strong>2. Account Registration</strong></p>
+                    <p>To use certain features, you must create an account. You agree to provide accurate, current, and complete information during registration and to update it as necessary. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+
+                    <p><strong>3. Services Provided</strong></p>
+                    <p>CoinTrade.ca is an educational and trading platform focused on cryptocurrency exchange in the Canadian market. We provide access to live market data, trading tools, educational resources, and other related services.</p>
+
+                    <p><strong>4. User Responsibilities</strong></p>
+                    <ul>
+                        <li>You agree to comply with all applicable Canadian laws and regulations.</li>
+                        <li>You will not use the Service for any fraudulent or illegal activities.</li>
+                        <li>You agree not to attempt unauthorized access to other accounts or systems.</li>
+                        <li>You are solely responsible for your investment decisions and understand the risks involved in cryptocurrency trading.</li>
+                    </ul>
+
+                    <p><strong>5. Intellectual Property</strong></p>
+                    <p>All content, trademarks, logos, and software on CoinTrade.ca are the property of CoinTrade.ca or its licensors. You agree not to reproduce, distribute, or create derivative works without prior written permission.</p>
+
+                    <p><strong>6. Privacy</strong></p>
+                    <p>Your privacy is important to us. Please review our Privacy Policy, which explains how we collect, use, and protect your information.</p>
+
+                    <p><strong>7. Limitation of Liability</strong></p>
+                    <p>To the maximum extent permitted by law, CoinTrade.ca shall not be liable for any direct, indirect, incidental, special, or consequential damages arising out of or in connection with your use of the Service.</p>
+
+                    <p><strong>8. Disclaimers</strong></p>
+                    <ul>
+                        <li>CoinTrade.ca provides the Service “as is” and “as available” without warranties of any kind.</li>
+                        <li>We do not guarantee accuracy, completeness, or timeliness of information.</li>
+                        <li>Cryptocurrency trading involves significant risk; past performance is not indicative of future results.</li>
+                    </ul>
+
+                    <p><strong>9. Termination</strong></p>
+                    <p>We may suspend or terminate your account and access to the Service at any time, without prior notice, if you violate these Terms.</p>
+
+                    <p><strong>10. Governing Law</strong></p>
+                    <p>These Terms shall be governed and construed in accordance with the laws of the Province of Ontario and the federal laws of Canada applicable therein, without regard to conflict of law principles.</p>
+
+                    <p><strong>11. Changes to Terms</strong></p>
+                    <p>We reserve the right to modify or replace these Terms at any time. We will notify users of significant changes through the website or email. Continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+
+                    <p><strong>12. Contact Us</strong></p>
+                    <p>If you have any questions about these Terms, please contact us at:<br>
+                    <a href="mailto:support@C-Trade.ca">support@C-Trade.ca</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cookieModal" tabindex="-1" aria-labelledby="cookieModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cookieModalLabel">Cookie Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Last updated:</strong> August 3, 2025</p>
+                    <p>This Cookie Policy explains how CoinTrade.ca (“we”, “us”, or “our”) uses cookies and similar tracking technologies when you visit or use our website.</p>
+                    <hr>
+                    <h6>1. What Are Cookies?</h6>
+                    <p>Cookies are small text files stored on your device (computer, smartphone, or tablet) when you visit a website. They help websites remember your actions and preferences (such as login, language, and display preferences) over a period of time, so you don’t have to re-enter them whenever you visit the site.</p>
+                    <hr>
+                    <h6>2. How We Use Cookies</h6>
+                    <p>We use cookies for the following purposes:</p>
+                    <ul>
+                        <li><strong>Necessary Cookies:</strong> These cookies are essential for the website to function properly. They enable core functionalities such as security, network management, and accessibility.</li>
+                        <li><strong>Performance Cookies:</strong> These cookies collect information about how visitors use our website (e.g., pages visited, time spent) to help us improve site performance.</li>
+                        <li><strong>Functional Cookies:</strong> These cookies remember your preferences (e.g., language or region) and provide enhanced, personalized features.</li>
+                        <li><strong>Advertising and Targeting Cookies:</strong> These cookies are used to deliver relevant advertisements and marketing messages tailored to your interests.</li>
+                    </ul>
+                    <hr>
+                    <h6>3. Third-Party Cookies</h6>
+                    <p>We may allow third-party service providers (such as analytics and advertising partners) to place cookies on your device when you use our website. These third parties may collect information about your online activities across different websites.</p>
+                    <hr>
+                    <h6>4. Managing Cookies</h6>
+                    <p>Most web browsers automatically accept cookies by default. However, you can usually modify your browser settings to:</p>
+                    <ul>
+                        <li>Block or delete cookies.</li>
+                        <li>Receive notifications when you receive a new cookie.</li>
+                        <li>Disable cookies altogether.</li>
+                    </ul>
+                    <p>Please note that if you disable or block certain cookies, some parts of our website may not function properly or offer full functionality.</p>
+                    <hr>
+                    <h6>5. More Information</h6>
+                    <p>For more details on cookies and how to manage them, please visit <a href="https://www.aboutcookies.org/">www.aboutcookies.org</a> or consult your browser’s help section.</p>
+                    <hr>
+                    <h6>6. Changes to This Cookie Policy</h6>
+                    <p>We may update this Cookie Policy from time to time. We will notify you of any significant changes by posting the new policy on this page.</p>
+                    <hr>
+                    <h6>7. Contact Us</h6>
+                    <p>If you have any questions about our use of cookies, please contact us at: <a href="mailto:privacy@C-Trade.ca">privacy@C-Trade.ca</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="complianceModal" tabindex="-1" aria-labelledby="complianceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complianceModalLabel">Compliance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This section outlines our commitment to regulatory compliance.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor.</p>
+                    <p>Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.</p>
+                    <p>Proin porttitor, orci nec nonummy molestie, enim est eleifend mi, non fermentum diam nisl sit amet erat.</p>
+                    <p>Duis semper. Duis arcu massa, scelerisque vitae, consequat in, pretium a, enim. Pellentesque congue.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Theme Toggle with proper light/dark mode support
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const brandLogo = document.getElementById('brand-logo');
+            const brandText = document.getElementById('brand-text');
+
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                brandLogo.src = 'img/icon.png';
+                brandText.style.display = 'inline';
+            } else {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                brandLogo.src = 'img/logo4x2.png';
+                brandText.style.display = 'none';
+            }
+        }
+        
+        // Load translations from txt files
+        async function loadLanguage(lang) {
+            const response = await fetch('lang/' + lang + '.txt');
+            const text = await response.text();
+            const translations = {};
+            text.split('\n').forEach(line => {
+                const parts = line.split('=');
+                if (parts.length === 2) {
+                    translations[parts[0].trim()] = parts[1].trim();
+                }
+            });
+            // update the document language attribute
+            document.documentElement.setAttribute('lang', lang);
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (translations[key]) {
+                    el.textContent = translations[key];
+                }
+            });
+            document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-placeholder');
+                if (translations[key]) {
+                    el.setAttribute('placeholder', translations[key]);
+                }
+            });
+        }
+
+        // Format numbers as currency
+        function formatCurrency(num, currency) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(num);
+        }
+
+        let currentCurrency = 'usd';
+
+        // Fetch live crypto prices
+        async function fetchPrices(currency) {
+            const normalizedCurrency = ['usd', 'eur', 'cad'].includes(currency) ? currency : 'usd';
+            const apiUrl = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,cardano,solana&vs_currencies=' + normalizedCurrency;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('Price API error');
+                }
+                const data = await response.json();
+                const mapping = {
+                    bitcoin: 'price-bitcoin',
+                    ethereum: 'price-ethereum',
+                    cardano: 'price-cardano',
+                    solana: 'price-solana'
+                };
+                Object.keys(mapping).forEach(coin => {
+                    if (data[coin] && data[coin][normalizedCurrency]) {
+                        document.getElementById(mapping[coin]).textContent = formatCurrency(data[coin][normalizedCurrency], normalizedCurrency);
+                        const symbolEl = document.querySelector('[data-coin="' + coin + '"]');
+                        if (symbolEl) {
+                            symbolEl.textContent = symbolEl.textContent.split('/')[0] + '/' + normalizedCurrency.toUpperCase();
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Unable to fetch live prices:', error);
+            }
+        }
+
+        // Handle language/currency dropdown
+        document.querySelectorAll('#lang-menu .dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                const currency = this.getAttribute('data-currency');
+                document.getElementById('current-lang').textContent = this.textContent;
+                loadLanguage(lang);
+                currentCurrency = currency;
+                fetchPrices(currency);
+            });
+        });
+
+        // Initialize defaults
+        loadLanguage('en');
+        fetchPrices(currentCurrency);
+        setInterval(() => fetchPrices(currentCurrency), 10000);
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Open clicked item if it wasn't active
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        }
+
+        // Contact Modal
+        function openContactModal() {
+            const contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
+            contactModal.show();
+        }
+
+        // Hero Image Slider
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        
+        // Auto-advance slides every 5 seconds
+        setInterval(nextSlide, 5000);
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Newsletter form submission
+        document.querySelector('.newsletter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = this.querySelector('.newsletter-input').value;
+            alert('Thank you for subscribing! We\'ll keep you updated with the latest news.');
+            this.reset();
+        });
+
+        // Contact form submission
+        document.querySelector('#contactModal form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your message! We\'ll get back to you soon.');
+            bootstrap.Modal.getInstance(document.getElementById('contactModal')).hide();
+            this.reset();
+        });
+
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

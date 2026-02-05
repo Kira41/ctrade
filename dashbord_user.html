@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tableau de bord</title>
+<!-- Bootstrap RTL CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Custom CSS -->
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="loginSection" class="container mt-5" style="max-width: 400px; display:none;">
+  <h2 class="mb-3">Connexion</h2>
+  <form id="userLoginForm">
+    <div class="mb-3">
+      <label for="loginEmail" class="form-label">Email</label>
+      <input type="email" class="form-control" id="loginEmail" required>
+    </div>
+    <div class="mb-3">
+      <label for="loginPassword" class="form-label">Mot de passe</label>
+      <input type="password" class="form-control" id="loginPassword" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Se connecter</button>
+  </form>
+</div>
+<div id="dashboardContainer" class="container-fluid" style="display:none;">
+<div class="row">
+<!-- Sidebar -->
+<div class="col-md-3 col-lg-2 sidebar p-0">
+<div class="d-flex flex-column p-3">
+<h3 class="text-center mb-4">Tableau de bord</h3>
+<ul class="nav nav-pills flex-column mb-auto">
+<li class="nav-item">
+<a class="nav-link active" data-bs-toggle="pill" href="#dashboard">
+<i class="fas fa-tachometer-alt" style="margin-right: 8px;"></i>Accueil </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#deposit">
+<i class="fas fa-money-bill-wave" style="margin-right: 8px;"></i>Dépôt </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#withdraw">
+<i class="fas fa-hand-holding-usd" style="margin-right: 8px;"></i>Retrait </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#Profil">
+<i class="fas fa-user" style="margin-right: 8px;"></i>Profil </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#trading">
+<i class="fas fa-chart-line" style="margin-right: 8px;"></i>Trading </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#kyc">
+<i class="fas fa-id-card" style="margin-right: 8px;"></i> KYC </a>
+</li>
+<li class="nav-item">
+<a class="nav-link" data-bs-toggle="pill" href="#offers">
+<i class="fas fa-gift" style="margin-right: 8px;"></i>Offres </a>
+</li>
+</ul>
+</div>
+</div>
+<!-- Main Content -->
+<div class="col-md-9 col-lg-10 main-content ms-sm-auto px-md-4 py-4">
+<!-- Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<h1 class="h2">Bonjour, <span id="firstname"></span></h1>
+<div class="btn-toolbar mb-2 mb-md-0">
+<div class="dropdown position-relative me-2">
+  <button aria-expanded="false" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" id="notificationsDropdownButton" type="button">
+    <i class="fas fa-bell"></i>
+  </button>
+  <span class="notification-badge" id="notificationCount">0</span>
+  <ul aria-labelledby="notificationsDropdownButton" class="dropdown-menu dropdown-menu-end" id="notificationsRecentes" style="min-width: 300px;">
+    <li class="dropdown-header">
+      <i class="fas fa-bell me-2"></i> Notifications récentes
+    </li>
+    <li>
+      <hr class="dropdown-divider"/>
+    </li>
+    <li id="notificationsDropdown" class="text-center text-muted py-3"></li>
+    <li>
+      <hr class="dropdown-divider"/>
+    </li>
+    <li class="text-center">
+      <a class="dropdown-item small" href="#"></a>
+    </li>
+  </ul>
+</div>
+<div class="dropdown me-2">
+<button aria-expanded="false" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" id="languageDropdown" type="button">
+<i class="fas fa-globe"></i>
+</button>
+<ul aria-labelledby="languageDropdown" class="dropdown-menu dropdown-menu-end" style="">
+<li class="dropdown-header">
+<i class="fas fa-language me-2"></i> Choisissez la langue
+                  </li>
+<li>
+<hr class="dropdown-divider"/>
+</li>
+<li>
+<a class="dropdown-item active" href="#" onclick="changeLanguage('ar')">
+<i class="fas fa-check me-2"></i> Français </a>
+</li>
+<li>
+<a class="dropdown-item" href="#" onclick="changeLanguage('en')"> English </a>
+</li>
+<li>
+<a class="dropdown-item" href="#" onclick="changeLanguage('ar')"> Arabe </a>
+</li>
+</ul>
+</div>
+<div class="dropdown">
+<button aria-expanded="false" class="btn btn-sm btn-outline-secondary dropdown-toggle ms-2 d-flex align-items-center" data-bs-toggle="dropdown" id="accountDropdown" type="button">
+Mon compte </button>
+<ul aria-labelledby="accountDropdown" class="dropdown-menu dropdown-menu-end" style="min-width: 250px;">
+<li class="dropdown-header text-center">
+<img alt="Image Utilisateur" class="rounded-circle mb-2 user-avatar" src="" style="width: 60px; height: 60px;"/>
+<div class="fw-bold" id="nameincompte">---</div>
+</li>
+<li>
+<hr class="dropdown-divider"/>
+</li>
+<li class="px-3 py-2">
+<div class="text-muted small">Solde total</div>
+<div class="fw-bold text-success" id="accountBalance">$12,500.00</div>
+</li>
+<li>
+<hr class="dropdown-divider"/>
+</li>
+<li>
+<a class="dropdown-item text-danger" href="#" onclick="logout()">
+<i class="fas fa-sign-out-alt me-2"></i>Se déconnecter </a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Tab Content -->
+<div class="tab-content">
+<!-- Trading Tab -->
+<div class="tab-pane fade" id="trading">
+<h2 class="mb-4">Plateforme du trading</h2>
+<div class="row">
+<!-- Trading Chart Section -->
+<div class="col-lg-8">
+<div class="card mb-4">
+<div class="card-header d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-chart-line me-2"></i> Graphique de trading
+                      </div>
+<div class="d-flex align-items-center">
+                    <label class="form-label me-2 mb-0" for="currencyPair">Paire de devises :</label>
+                    <select class="form-select form-select-sm" id="currencyPair" style="width: auto;">
+                      <optgroup label="Crypto">
+                        <option value="BTCUSD">BTC/USD</option>
+                        <option value="ETHUSD">ETH/USD</option>
+                        <option value="USDTUSD">USDT/USD</option>
+                        <option value="BNBUSD">BNB/USD</option>
+                        <option value="USDCUSD">USDC/USD</option>
+                        <option value="XRPUSD">XRP/USD</option>
+                        <option value="ADAUSD">ADA/USD</option>
+                        <option value="DOGEUSD">DOGE/USD</option>
+                        <option value="MATICUSD">MATIC/USD</option>
+                        <option value="SOLUSD">SOL/USD</option>
+                        <option value="DOTUSD">DOT/USD</option>
+                        <option value="SHIBUSD">SHIB/USD</option>
+                        <option value="AVAXUSD">AVAX/USD</option>
+                        <option value="LUNAUSD">LUNA/USD</option>
+                        <option value="LTCUSD">LTC/USD</option>
+                        <option value="LINKUSD">LINK/USD</option>
+                        <option value="UNIUSD">UNI/USD</option>
+                        <option value="ALGOUSD">ALGO/USD</option>
+                        <option value="XLMUSD">XLM/USD</option>
+                        <option value="VETUSD">VET/USD</option>
+                        <option value="ICPUSD">ICP/USD</option>
+                        <option value="ATOMUSD">ATOM/USD</option>
+                        <option value="FILUSD">FIL/USD</option>
+                        <option value="TRXUSD">TRX/USD</option>
+                        <option value="XTZUSD">XTZ/USD</option>
+                        <option value="THETAUSD">THETA/USD</option>
+                        <option value="FTTUSD">FTT/USD</option>
+                        <option value="EOSUSD">EOS/USD</option>
+                        <option value="HBARUSD">HBAR/USD</option>
+                        <option value="IOTAUSD">IOTA/USD</option>
+                        <option value="XMRUSD">XMR/USD</option>
+                        <option value="BCHUSD">BCH/USD</option>
+                        <option value="NEOUSD">NEO/USD</option>
+                        <option value="EGLDUSD">EGLD/USD</option>
+                        <option value="ZECUSD">ZEC/USD</option>
+                        <option value="CAKEUSD">CAKE/USD</option>
+                        <option value="KLAYUSD">KLAY/USD</option>
+                        <option value="ONEUSD">ONE/USD</option>
+                        <option value="MANAUSD">MANA/USD</option>
+                        <option value="ENJUSD">ENJ/USD</option>
+                        <option value="AAVEUSD">AAVE/USD</option>
+                        <option value="MKRUSD">MKR/USD</option>
+                        <option value="SNXUSD">SNX/USD</option>
+                        <option value="COMPUSD">COMP/USD</option>
+                        <option value="SUSHIUSD">SUSHI/USD</option>
+                        <option value="HTUSD">HT/USD</option>
+                        <option value="CELUSD">CEL/USD</option>
+                        <option value="OKBUSD">OKB/USD</option>
+                        <option value="WAVESUSD">WAVES/USD</option>
+                        <option value="SGCUSD">SGC/USD</option>
+                      </optgroup>
+                      <optgroup label="Commodities">
+                        <option value="GOLDUSD">Gold/USD</option>
+                        <option value="SILVERUSD">Silver/USD</option>
+                        <option value="PLATINUMUSD">Platinum/USD</option>
+                        <option value="COPPERUSD">Copper/USD</option>
+                        <option value="WTIUSD">Crude Oil – WTI/USD</option>
+                        <option value="BRENTUSD">Crude Oil – Brent/USD</option>
+                        <option value="NATGASUSD">Natural Gas/USD</option>
+                        <option value="COALUSD">Coal/USD</option>
+                        <option value="ALUMINUMUSD">Aluminum/USD</option>
+                        <option value="NICKELUSD">Nickel/USD</option>
+                        <option value="ZINCUSD">Zinc/USD</option>
+                        <option value="LEADUSD">Lead/USD</option>
+                        <option value="IRONOREUSD">Iron Ore/USD</option>
+                        <option value="WHEATUSD">Wheat/USD</option>
+                        <option value="CORNUSD">Corn/USD</option>
+                        <option value="SOYBEANUSD">Soybeans/USD</option>
+                        <option value="COFFEEUSD">Coffee/USD</option>
+                        <option value="COCOAUSD">Cocoa/USD</option>
+                        <option value="SUGARUSD">Sugar/USD</option>
+                        <option value="COTTONUSD">Cotton/USD</option>
+                      </optgroup>
+                    </select>
+</div>
+</div>
+<div class="card-body p-0">
+<!-- TradingView Chart Container -->
+<div id="tradingview_chart" style="height: 500px; width: 100%;">
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container" style="height:100%;width:100%">
+<div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+<div class="tradingview-widget-copyright">
+<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+<span class="blue-text">Track all markets on TradingView</span>
+</a>
+</div>
+<script async="" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" type="text/javascript">
+                            {
+                              "autosize": true,
+                              "symbol": "BINANCE:BTCUSDT",
+                              "interval": "D",
+                              "timezone": "Etc/UTC",
+                              "theme": "light",
+                              "style": "1",
+                              "locale": "en",
+                              "allow_symbol_change": true,
+                              "calendar": false,
+                              "support_host": "https://www.tradingview.com"
+                            }
+                          </script>
+</div>
+<!-- TradingView Widget END -->
+</div>
+</div>
+</div>
+</div>
+<!-- Trading Panel -->
+<div class="col-lg-4">
+<!-- Current Price Card -->
+<div class="card mb-3">
+<div class="card-body text-center">
+<h5 class="card-title">Prix actuel</h5>
+<h2 class="text-primary mb-0" id="currentPrice">$43,250.00</h2>
+<small class="text-success" id="priceChange">+2.5% (+$1,050.00)</small>
+</div>
+</div>
+<!-- Trading Form -->
+<div class="card mb-3">
+<div class="card-header">
+<i class="fas fa-exchange-alt me-2"></i> Exécution de la transaction
+                    </div>
+<div class="card-body">
+<form id="tradingForm">
+<div class="mb-3">
+<label class="form-label" for="tradeAmount">Montant</label>
+<div class="input-group">
+<input class="form-control" name="tradeAmount" id="tradeAmount" placeholder="Entrez le montant" required="" step="0.01" type="number"/>
+<span class="input-group-text" id="tradeAmountCurrency" style="cursor: pointer;">
+  <i class="fas fa-exchange-alt me-1"></i>USD
+</span>
+</div>
+<div class="form-text">Solde disponible : <span class="fw-bold" id="soldeintrade">---</span>
+</div>
+<div class="form-text">Valeur de la paire : <span class="fw-bold" id="tradeAmountEquivalent">--</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="orderType">Type d’ordre</label>
+<select class="form-select" id="orderType">
+<option value="market">Ordre au marché</option>
+<option value="limit">Ordre à cours limité</option>
+<option value="stop">Ordre stop</option>
+<option value="stoplimit">Stop-limit</option>
+<option value="trailing_stop">Trailing stop</option>
+<option value="oco">OCO</option>
+</select>
+</div>
+<div class="mb-3" id="stopPriceDiv" style="display: none;">
+<label class="form-label" for="stopPrice">Prix stop</label>
+<div class="input-group">
+  <input class="form-control" name="stopPrice" id="stopPrice" placeholder="Entrez le prix" step="0.01" type="number"/>
+  <span class="input-group-text">USD</span>
+  <button class="btn btn-outline-secondary" id="useCurrentStopPrice" type="button">
+    <i class="fas fa-bolt"></i>
+  </button>
+</div>
+</div>
+<div class="mb-3" id="limitPriceDiv" style="display: none;">
+<label class="form-label" for="limitPrice">Prix limite</label>
+<div class="input-group">
+  <input class="form-control" name="limitPrice" id="limitPrice" placeholder="Entrez le prix" step="0.01" type="number"/>
+  <span class="input-group-text">USD</span>
+  <button class="btn btn-outline-secondary" id="useCurrentLimitPrice" type="button">
+    <i class="fas fa-bolt"></i>
+  </button>
+</div>
+<div class="mb-3" id="stopLimitPriceDiv" style="display: none;">
+<label class="form-label" for="stopLimitPrice">Prix limite du stop</label>
+<div class="input-group">
+<input class="form-control" name="stopLimitPrice" id="stopLimitPrice" placeholder="Entrez le prix" step="0.01" type="number"/>
+<span class="input-group-text">USD</span>
+</div>
+</div>
+</div>
+<div class="row g-2 mb-3">
+<div class="col-6">
+<button class="btn btn-success w-100" id="buyBtn" type="button">
+<i class="fas fa-arrow-up me-2"></i>Acheter </button>
+</div>
+<div class="col-6">
+<button class="btn btn-danger w-100" id="sellBtn" type="button">
+<i class="fas fa-arrow-down me-2"></i>Vendre </button>
+</div>
+</div>
+</form>
+</div>
+<!-- Stop Loss Settings -->
+<div class="card">
+<div class="card-header">
+<i class="fas fa-shield-alt me-2"></i> Paramètres du stop loss
+                    </div>
+<div class="card-body">
+<div class="form-check mb-3">
+<input class="form-check-input" id="enableStopLoss" type="checkbox"/>
+<label class="form-check-label" for="enableStopLoss"> Activer le stop loss </label>
+</div>
+<div id="stopLossSettings" style="display: none;">
+<div class="mb-3">
+<label class="form-label" for="stopLossType">Type de stop loss</label>
+<select class="form-select" id="stopLossType">
+<option value="price">À l’atteinte d’un prix spécifique</option>
+<option value="percentage">Lors d’un pourcentage de perte spécifié</option>
+<option value="time">À un moment précis</option>
+<option value="trailing">Trailing stop</option>
+</select>
+</div>
+<div class="mb-3" id="stopLossPriceDiv">
+<label class="form-label" for="stopLossPrice">Prix du stop loss</label>
+<div class="input-group">
+<input class="form-control" name="stopLossPrice" id="stopLossPrice" placeholder="Entrez le prix" step="0.01" type="number"/>
+<span class="input-group-text">USD</span>
+</div>
+</div>
+<div class="mb-3" id="stopLossPercentageDiv" style="display: none;">
+<label class="form-label" for="stopLossPercentage">Pourcentage de perte autorisé</label>
+<div class="input-group">
+<input class="form-control" name="stopLossPercentage" id="stopLossPercentage" max="100" min="0.1" placeholder="Entrez le pourcentage" step="0.1" type="number"/>
+<span class="input-group-text">%</span>
+</div>
+</div>
+<div class="mb-3" id="trailingPercentageDiv" style="display: none;">
+<label class="form-label" for="trailingPercentage">Pourcentage du trailing stop</label>
+<div class="input-group">
+<input class="form-control" name="trailingPercentage" id="trailingPercentage" max="100" min="0.1" placeholder="Entrez le pourcentage" step="0.1" type="number"/>
+<span class="input-group-text">%</span>
+</div>
+</div>
+<div class="mb-3" id="stopLossTimeDiv" style="display: none;">
+<label class="form-label" for="stopLossTime">Heure d'arrêt du trading</label>
+<input class="form-control" id="stopLossTime" type="datetime-local"/>
+</div>
+<div class="form-check mb-3">
+<input class="form-check-input" id="enableOCO" type="checkbox"/>
+<label class="form-check-label" for="enableOCO"> Activer OCO (take profit + stop loss)</label>
+</div>
+<div class="mb-3" id="takeProfitDiv" style="display: none;">
+<label class="form-label" for="takeProfitPrice">Prix take profit</label>
+<div class="input-group">
+<input class="form-control" name="takeProfitPrice" id="takeProfitPrice" placeholder="Entrez le prix" step="0.01" type="number"/>
+<span class="input-group-text">USD</span>
+</div>
+</div>
+<button class="btn btn-warning btn-sm w-100" id="setStopLoss" type="button">
+<i class="fas fa-save me-2"></i>Enregistrer les paramètres du stop loss </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trading History -->
+<div class="row mt-4">
+<div class="col-12">
+<div class="card" id="historiquedutradingCard">
+<div class="card-header" id="historiquedutradingHeader">
+<i class="fas fa-history me-2"></i> Historique du trading
+                    </div>
+<div class="card-body">
+<div id="cancelOrderAlert"></div>
+<div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+<table class="table table-hover" id="historiqueTrading">
+<thead>
+<tr>
+<th>Opération</th>
+<th>Le temps</th>
+<th>Paire de devises</th>
+<th>Type</th>
+<th>Quantité</th>
+<th>Prix d'achat</th>
+<th>Statut</th>
+<th>Profit/Perte</th>
+<th>Annuler</th>
+</tr>
+</thead>
+<tbody id="tradingHistory">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Tab -->
+<div class="tab-pane fade show active" id="dashboard">
+<div class="row">
+<div class="col-md-6 col-lg-3">
+<div class="dashboard-stat stat-primary">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<h3 class="mb-0" id="soldeTotal">--- $</h3>
+<p class="mb-0">Solde total</p>
+</div>
+<i class="fas fa-wallet stat-icon"></i>
+</div>
+</div>
+</div>
+<div class="col-md-6 col-lg-3">
+<div class="dashboard-stat stat-success">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<h3 class="mb-0" id="totalDepots">--- $</h3>
+<p class="mb-0">Total Dépôts</p>
+</div>
+<i class="fas fa-arrow-circle-down stat-icon"></i>
+</div>
+</div>
+</div>
+<div class="col-md-6 col-lg-3">
+  <div class="dashboard-stat stat-danger" id="profit-box">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h3 class="mb-0" id="profit">--- $</h3>
+        <p class="mb-0">Profit</p>
+      </div>
+      <i class="fas fa-chart-line stat-icon"></i>
+    </div>
+  </div>
+</div>
+<div class="col-md-6 col-lg-3">
+<div class="dashboard-stat stat-warning">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<h3 class="mb-0" id="nbTransactions">---</h3>
+<p class="mb-0">Nombre de transactions</p>
+</div>
+<i class="fas fa-exchange-alt stat-icon"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="row mt-4">
+<div class="col-md-8">
+<div class="card" id="transactionsCard">
+  <div class="card-header" id="transactionsHeader">
+    <i class="fas fa-history me-2"></i> Toutes les transactions
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="transactionsTable" class="table table-hover">
+        <thead>
+          <tr>
+            <th>Numéro Opération</th>
+            <th>Type</th>
+            <th>Quantité</th>
+            <th>Date</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody id="transactionsTableBody"></tbody>
+      </table>
+    </div>
+    <ul class="pagination justify-content-center mt-3" id="transactionsPagination"></ul>
+  </div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card">
+<div class="card-header">
+<i class="fas fa-bullhorn me-2"></i> Notifications
+                    </div>
+<div class="card-body"><div id="notifications"></div></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Deposit Tab -->
+<div class="tab-pane fade" id="deposit">
+<h2 class="mb-4">Déposer de l'argent</h2>
+<div id="depositAlert"></div>
+<div class="row">
+<div class="col-lg-8">
+<div class="card">
+<div class="card-header">
+<i class="fas fa-money-bill-wave me-2"></i>Méthodes de dépôt
+                    </div>
+<div class="card-body" id="infoCompteBancaire">
+<ul class="nav nav-tabs" id="depositTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button aria-controls="bank" aria-selected="true" class="nav-link active" data-bs-target="#bank" data-bs-toggle="tab" id="bank-tab" role="tab" type="button">
+<i class="fas fa-university me-2"></i>Virement bancaire </button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="card" aria-selected="false" class="nav-link" data-bs-target="#card" data-bs-toggle="tab" id="card-tab" role="tab" type="button">
+<i class="fas fa-credit-card me-2"></i>Carte de crédit </button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="crypto" aria-selected="false" class="nav-link" data-bs-target="#crypto" data-bs-toggle="tab" id="crypto-tab" role="tab" type="button">
+<i class="fab fa-bitcoin me-2"></i>Cryptomonnaies </button>
+</li>
+</ul>
+<div class="tab-content p-3" id="depositTabsContent">
+<!-- Bank Transfer Tab -->
+<div aria-labelledby="bank-tab" class="tab-pane fade show active" id="bank" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i>Veuillez transférer le montant requis au compte bancaire ci-dessous. Le montant sera ajouté à votre compte après confirmation.
+                          </div>
+<div class="card mb-4 bg-light">
+<div class="card-body">
+<h5 class="card-title">Informations sur le compte bancaire</h5>
+<div class="row mb-2">
+<div class="col-md-4 fw-bold">Nom de la banque :</div>
+<div class="col-md-8" id="widhrawbankname">---</div>
+</div>
+<div class="row mb-2">
+<div class="col-md-4 fw-bold">Nom du bénéficiaire :</div>
+<div class="col-md-8" id="widhrawusername">---</div>
+</div>
+<div class="row mb-2">
+<div class="col-md-4 fw-bold">Numéro de compte :</div>
+<div class="col-md-8" id="widhrawacountnumber">---</div>
+</div>
+<div class="row mb-2">
+<div class="col-md-4 fw-bold">IBAN:</div>
+<div class="col-md-8" id="widhrawiben">---</div>
+</div>
+<div class="row mb-2">
+<div class="col-md-4 fw-bold">SWIFT/BIC:</div>
+<div class="col-md-8" id="widhrawswift">---</div>
+</div>
+</div>
+</div>
+<form id="bankDepositForm">
+<div class="mb-3">
+<label class="form-label" for="bankDepositAmount">Montant à déposer</label>
+<div class="input-group">
+<input class="form-control" name="bankDepositAmount" id="bankDepositAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="bankTransferReceipt">Reçu de transfert</label>
+<input class="form-control" id="bankTransferReceipt" required="" type="file"/>
+<div class="form-text">Veuillez télécharger une image ou un PDF du reçu de virement bancaire.</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="bankTransferReference">Numéro de référence de transfert</label>
+<input class="form-control" name="bankTransferReference" id="bankTransferReference" placeholder="Entrez le numéro de référence du virement" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="bankTransferNotes">Remarques (facultatif)</label>
+<textarea class="form-control" id="bankTransferNotes" placeholder="Autres informations que vous souhaitez ajouter" rows="3"></textarea>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-paper-plane me-2"></i>Confirmer le dépôt </button>
+</form>
+</div>
+<!-- Credit Card Tab -->
+<div aria-labelledby="card-tab" class="tab-pane fade" id="card" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Vous pouvez déposer de l'argent en utilisant une carte de crédit ou de débit. Le montant sera ajouté à votre compte immédiatement.
+                          </div>
+<form id="cardDepositForm">
+<div class="mb-3">
+<label class="form-label" for="cardDepositAmount">Montant à déposer</label>
+<div class="input-group">
+<input class="form-control" name="cardDepositAmount" id="cardDepositAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="cardName">Nom sur la carte</label>
+<input class="form-control" name="cardName" id="cardName" placeholder="Entrez le nom tel qu’il apparaît sur la carte" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="cardNumber">Numéro de la carte</label>
+<div class="input-group">
+<input class="form-control" name="cardNumber" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX" required="" type="text"/>
+<span class="input-group-text">
+<i class="fab fa-cc-visa me-2"></i>
+<i class="fab fa-cc-mastercard me-2"></i>
+<i class="fab fa-cc-amex"></i>
+</span>
+</div>
+</div>
+<div class="row">
+<div class="col-md-6 mb-3">
+<label class="form-label" for="cardExpiry">Date d’expiration</label>
+<input class="form-control" name="cardExpiry" id="cardExpiry" placeholder="MM/YY" required="" type="text" maxlength="5" pattern="\d{2}/\d{2}" inputmode="numeric"/>
+</div>
+<div class="col-md-6 mb-3">
+<label class="form-label" for="cardCVV">Code de sécurité (CVV)</label>
+<input class="form-control" name="cardCVV" id="cardCVV" placeholder="XXX" required="" type="text" maxlength="4" pattern="\d{3,4}" inputmode="numeric"/>
+</div>
+</div>
+<div class="mb-3 form-check">
+<input class="form-check-input" id="saveCardInfo" type="checkbox"/>
+<label class="form-check-label" for="saveCardInfo">Enregistrer les informations de la carte pour les transactions futures</label>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-lock me-2"></i>Paiement sécurisé terminé </button>
+</form>
+</div>
+<!-- Crypto Tab -->
+<div aria-labelledby="crypto-tab" class="tab-pane fade" id="crypto" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Vous pouvez déposer des fonds en utilisant des crypto-monnaies. Veuillez transférer la devise choisie à l'adresse spécifiée.
+                          </div>
+<div class="mb-4">
+<label class="form-label" for="cryptoCurrency">Choisissez la crypto-monnaie</label>
+<select class="form-select" id="cryptoCurrency">
+</select>
+</div>
+<div class="card mb-4 bg-light">
+<div class="card-body text-center">
+<h5 class="card-title">Adresse du portefeuille</h5>
+<div class="qr-code bg-white p-3 d-inline-block mb-3">
+<img id="cryptoQR" alt="QR Code" class="img-fluid" src=""/>
+</div>
+<div class="input-group mb-3">
+<input class="form-control" id="cryptoDepositAddress" name="cryptoDepositAddress" readonly type="text" value=""/>
+<button class="btn btn-outline-secondary" title="Copier l'adresse" type="button">
+<i class="fas fa-copy"></i>
+</button>
+</div>
+<div class="alert alert-warning" id="alertWarning1">
+<i class="fas fa-exclamation-triangle me-2"></i> Assurez-vous d’envoyer la bonne crypto-monnaie à la bonne adresse. Les transactions sont irréversibles.
+                              </div>
+</div>
+</div>
+<form id="cryptoDepositForm">
+<div class="mb-3">
+<label class="form-label" for="cryptoAmount">Montant à déposer (en dollars américains)</label>
+<div class="input-group">
+<input class="form-control" name="cryptoAmount" id="cryptoAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+<div class="form-text"> Équivalent approximatif : <span class="fw-bold">0.0034 BTC</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="cryptoTxId">Identifiant de la transaction (TXID)</label>
+<input class="form-control" name="cryptoTxId" id="cryptoTxId" placeholder="Entrez l’identifiant de la transaction après avoir effectué le transfert" type="text"/>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-check-circle me-2"></i>Confirmer le dépôt </button>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-lg-4">
+<div class="card mb-4" id="historiquedesdptsCard">
+<div class="card-header" id="historiquedesdptsHeader">
+<i class="fas fa-history me-2"></i>Historique des dépôts
+                    </div>
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Quantité</th>
+    <th>Méthode</th>
+    <th>Statut</th>
+</tr>
+</thead>
+<tbody id="historiqueDepots">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header">
+<i class="fas fa-info-circle me-2"></i>Informations sur le dépôt
+                    </div>
+<div class="card-body">
+<ul class="list-group list-group-flush">
+<li class="list-group-item d-flex justify-content-between align-items-center">Montant minimum de dépôt <span class="fw-bold">250 $</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">Montant maximum de dépôt <span class="fw-bold">100,000 $</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">Frais de dépôt (Carte) <span class="fw-bold">2.5%</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">Frais de dépôt (Virement bancaire) <span class="fw-bold">Gratuit</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">Frais de dépôt (Cryptomonnaies) <span class="fw-bold">1%</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Withdraw Tab -->
+<div class="tab-pane fade" id="withdraw">
+<h2 class="mb-4">Retrait de fonds</h2>
+<div id="withdrawAlert"></div>
+<div class="row">
+<div class="col-lg-8">
+<div class="card">
+<div class="card-header">
+<i class="fas fa-hand-holding-usd me-2"></i> Méthodes de retrait
+                    </div>
+<div class="card-body">
+<ul class="nav nav-tabs" id="withdrawTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button aria-controls="bank-withdraw" aria-selected="true" class="nav-link active" data-bs-target="#bank-withdraw" data-bs-toggle="tab" id="bank-withdraw-tab" role="tab" type="button">
+<i class="fas fa-university me-2"></i>Virement bancaire </button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="crypto-withdraw" aria-selected="false" class="nav-link" data-bs-target="#crypto-withdraw" data-bs-toggle="tab" id="crypto-withdraw-tab" role="tab" type="button">
+<i class="fab fa-bitcoin me-2"></i>Cryptomonnaies </button>
+</li>
+<li class="nav-item" role="presentation">
+<button aria-controls="paypal-withdraw" aria-selected="false" class="nav-link" data-bs-target="#paypal-withdraw" data-bs-toggle="tab" id="paypal-withdraw-tab" role="tab" type="button">
+<i class="fab fa-paypal me-2"></i>PayPal </button>
+</li>
+</ul>
+<div class="tab-content p-3" id="withdrawTabsContent">
+<!-- Bank Transfer Withdraw Tab -->
+<div aria-labelledby="bank-withdraw-tab" class="tab-pane fade show active" id="bank-withdraw" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Entrez les coordonnées de votre compte bancaire pour retirer des fonds. La demande de retrait sera traitée sous 1 à 3 jours ouvrables.
+                          </div>
+<form id="bankWithdrawForm">
+<div class="mb-3">
+<label class="form-label" for="withdrawAmount">Montant à retirer</label>
+<div class="input-group">
+<input class="form-control" name="withdrawAmount" id="withdrawAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+<div class="form-text">Solde disponible : <span class="fw-bold" id="soldedisponible1">--- $</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="bankName">Nom de la banque</label>
+<input class="form-control" name="bankName" id="bankName" placeholder="Entrez le nom de la banque" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="accountHolder">Nom du titulaire du compte</label>
+<input class="form-control" name="accountHolder" id="accountHolder" placeholder="Entrez le nom du titulaire du compte" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="accountNumber">Numéro de compte</label>
+<input class="form-control" name="accountNumber" id="accountNumber" placeholder="Entrez le numéro de compte" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="iban">IBAN</label>
+<input class="form-control" name="iban" id="iban" placeholder="Entrez le Numéro IBAN" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="swiftCode">Code SWIFT/BIC</label>
+<input class="form-control" name="swiftCode" id="swiftCode" placeholder="Entrez le code SWIFT/BIC" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="withdrawNotes">Remarques (facultatif)</label>
+<textarea class="form-control" id="withdrawNotes" placeholder="Autres informations que vous souhaitez ajouter" rows="3"></textarea>
+</div>
+<div class="mb-3 form-check">
+<input checked="" class="form-check-input" id="saveBankInfo" type="checkbox" required/>
+<label class="form-check-label" for="saveBankInfo">Enregistrer les informations bancaires pour les transactions futures</label>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-paper-plane me-2"></i>Confirmer le retrait </button>
+</form>
+</div>
+<!-- Crypto Withdraw Tab -->
+<div aria-labelledby="crypto-withdraw-tab" class="tab-pane fade" id="crypto-withdraw" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Entrez l’adresse de votre portefeuille numérique pour retirer des fonds. La demande de retrait sera traitée dans un délai de 1 à 24 heures.
+                          </div>
+<form id="cryptoWithdrawForm">
+<div class="mb-3">
+<label class="form-label" for="cryptoWithdrawAmount">Montant à retirer</label>
+<div class="input-group">
+<input class="form-control" name="cryptoWithdrawAmount" id="cryptoWithdrawAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+<div class="form-text">Solde disponible : <span class="fw-bold" id="soldedisponible2">--- $</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="cryptoCurrencyWithdraw">Choisissez la crypto-monnaie</label>
+<select class="form-select" id="cryptoCurrencyWithdraw" required="">
+<option value="">-- Choisissez la crypto-monnaie --</option>
+<option value="btc">Bitcoin</option>
+<option value="eth">Ethereum</option>
+<option value="usdt">Tether</option>
+<option value="usdc">USD Coin</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label" for="cryptoNetwork">Choisissez le réseau</label>
+<select class="form-select" id="cryptoNetwork" required="">
+<option value="">-- Choisissez le réseau --</option>
+</select>
+<div class="form-text text-warning">
+<i class="fas fa-exclamation-triangle me-1"></i> Assurez-vous de choisir le bon réseau afin d’éviter toute perte de fonds.
+                              </div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="walletAddress">Adresse du portefeuille</label>
+<input class="form-control" name="walletAddress" id="walletAddress" placeholder="Entrez l’adresse de votre portefeuille numérique" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="walletAddressConfirm">Confirmation de l’adresse du portefeuille</label>
+<input class="form-control" name="walletAddressConfirm" id="walletAddressConfirm" placeholder="Entrez à nouveau l’adresse du portefeuille" required="" type="text"/>
+</div>
+<div class="mb-3 form-check">
+<input class="form-check-input" id="confirmAddress" required="" type="checkbox"/>
+<label class="form-check-label" for="confirmAddress">Je confirme que l’adresse du portefeuille est correcte et j’assume l’entière responsabilité en cas d’erreur dans l’adresse.</label>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-paper-plane me-2"></i>Confirmer le retrait </button>
+</form>
+</div>
+<!-- PayPal Withdraw Tab -->
+<div aria-labelledby="paypal-withdraw-tab" class="tab-pane fade" id="paypal-withdraw" role="tabpanel">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Entrez l’adresse e-mail associée à votre compte PayPal. La demande de retrait sera traitée dans un délai de 1 à 24 heures.
+                          </div>
+<form id="paypalWithdrawForm">
+<div class="mb-3">
+<label class="form-label" for="paypalWithdrawAmount">Montant à retirer</label>
+<div class="input-group">
+<input class="form-control" name="paypalWithdrawAmount" id="paypalWithdrawAmount" placeholder="Entrez le montant" required="" type="number"/>
+<span class="input-group-text">$</span>
+</div>
+<div class="form-text">Solde disponible : <span class="fw-bold" id="soldedisponible3">--- $</span>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="paypalEmail">Adresse e-mail PayPal</label>
+<input class="form-control" name="paypalEmail" id="paypalEmail" placeholder="Entrez l’adresse e-mail associée à votre compte PayPal" required="" type="email"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="paypalEmailConfirm">Confirmation de l’adresse e-mail</label>
+<input class="form-control" name="paypalEmailConfirm" id="paypalEmailConfirm" placeholder="Entrez à nouveau l’adresse e-mail" required="" type="email"/>
+</div>
+<div class="mb-3 form-check">
+<input class="form-check-input" id="savePaypalInfo" type="checkbox" required/>
+<label class="form-check-label" for="savePaypalInfo"> Enregistrer les informations PayPal pour les transactions futures</label>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-paper-plane me-2"></i>Confirmer le retrait </button>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-lg-4">
+<div class="card mb-4" id="historiquedesretraitsCard">
+<div class="card-header" id="historiquedesretraitsHeader">
+<i class="fas fa-history me-2"></i> Historique des retraits
+                    </div>
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead>
+<tr>
+<th>ID</th>
+<th>Quantité</th>
+<th>Méthode</th>
+<th>Statut</th>
+</tr>
+</thead>
+<tbody id="historiqueRetraits">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header">
+<i class="fas fa-info-circle me-2"></i> Informations de retrait
+                    </div>
+<div class="card-body">
+<ul class="list-group list-group-flush">
+<li class="list-group-item d-flex justify-content-between align-items-center"> Montant minimum de retrait <span class="fw-bold">50 $</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center"> Montant maximal de retrait <span class="fw-bold">500,000 $</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center"> Frais de retrait (virement bancaire) <span class="fw-bold">25 $</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center"> Frais de retrait (crypto-monnaies) <span class="fw-bold">1%</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center"> Frais de retrait (PayPal) <span class="fw-bold">2%</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center"> Délai de traitement <span class="fw-bold">1 à 3 jours ouvrables</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Profile Tab -->
+<div class="tab-pane fade" id="Profil">
+<h2 class="mb-4">Profil</h2>
+<div class="row">
+<div class="col-lg-4">
+<div class="card mb-4">
+<div class="card-body text-center">
+<div class="position-relative d-inline-block mb-3">
+<img alt="Image Profil" class="rounded-circle Profil-img" src="https://via.placeholder.com/150"/>
+<button class="btn btn-sm btn-primary position-absolute bottom-0 end-0" data-bs-target="#changeProfilePicModal" data-bs-toggle="modal">
+<i class="fas fa-camera"></i>
+</button>
+</div>
+<h5 class="mb-1" id="fullNameHeader">---</h5>
+<p class="text-muted mb-3" id="memberSince">Membre depuis janvier 2025</p>
+<div class="d-flex justify-content-center mb-2">
+<span class="badge bg-success me-2" id="compteverifie">---</span>
+<span class="badge bg-primary" id="niveauavance">---</span>
+</div>
+</div>
+</div>
+<div class="card mb-4" id="accountSecurityCard">
+<div class="card-header">
+<i class="fas fa-shield-alt me-2"></i> Sécurité du compte
+                    </div>
+<div class="card-body" id="securiteCompte">
+<div class="mb-3">
+<div class="d-flex justify-content-between align-items-center mb-2">
+<span>Niveau de sécurité du mot de passe</span>
+<span class="badge bg-success" id="passwordStrength">---</span>
+</div>
+<div class="progress">
+<div aria-valuemax="100" aria-valuemin="0" aria-valuenow="85" class="progress-bar bg-success" id="passwordStrengthBar" role="progressbar" style=""></div>
+</div>
+</div>
+<div class="mb-3">
+<div class="d-flex justify-content-between align-items-center mb-2">
+<span>2FA (Authentification à deux facteurs)</span>
+<div class="form-check form-switch" id="twoFactorAuthSwitch">
+<input checked="" class="form-check-input" id="twoFactorAuth" type="checkbox"/>
+</div>
+</div>
+<small class="text-muted">Activez l’authentification à deux facteurs pour votre compte</small>
+</div>
+<div class="d-grid gap-2">
+<button class="btn btn-outline-primary" data-bs-target="#changePasswordModal" data-bs-toggle="modal">
+<i class="fas fa-key me-2"></i>Changer le mot de passe </button>
+<button class="btn btn-outline-secondary" id="loginHistoryBtn" data-bs-toggle="modal" data-bs-target="#loginHistoryModal">
+<i class="fas fa-history me-2"></i>Historique des connexions </button>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-header">
+<i class="fas fa-bell me-2"></i> Paramètres Notifications
+                    </div>
+<div class="card-body" id="parametresNotifications">
+<div class="mb-3">
+<div class="form-check form-switch">
+<input checked="" class="form-check-input" id="emailNotifications" type="checkbox"/>
+<label class="form-check-label" for="emailNotifications">Notifications par e-mail</label>
+</div>
+<small class="text-muted d-block">Recevoir des notifications par e-mail</small>
+</div>
+<div class="mb-3">
+<div class="form-check form-switch">
+<input class="form-check-input" id="smsNotifications" type="checkbox"/>
+<label class="form-check-label" for="smsNotifications">Notifications par SMS</label>
+</div>
+<small class="text-muted d-block">Recevoir des notifications par SMS</small>
+</div>
+<div class="mb-3">
+<div class="form-check form-switch">
+<input checked="" class="form-check-input" id="loginAlerts" type="checkbox"/>
+<label class="form-check-label" for="loginAlerts">Alertes de connexion</label>
+</div>
+<small class="text-muted d-block">Recevoir des alertes lors d'une connexion à partir d’un nouvel appareil</small>
+</div>
+<div class="mb-3">
+<div class="form-check form-switch">
+<input checked="" class="form-check-input" id="transactionAlerts" type="checkbox"/>
+<label class="form-check-label" for="transactionAlerts">Alertes de transactions</label>
+</div>
+<small class="text-muted d-block">Recevoir des alertes lors de transactions financières</small>
+</div>
+</div>
+</div>
+</div>
+<div class="col-lg-8">
+<div class="card mb-4">
+<div class="card-header d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-user-edit me-2"></i> Informations personnelles
+                      </div>
+<button class="btn btn-sm btn-primary" id="editProfileBtn">
+<i class="fas fa-edit me-2"></i>Modifier </button>
+</div>
+<div class="card-body" id="profilInfo">
+<!-- Afficher les informations personnelles -->
+<div id="ProfilInfo">
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Nom complet</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="fullName">---</div>
+</div>
+<hr/>
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Adresse e-mail</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="emailaddress">---</div>
+</div>
+<hr/>
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Numéro de téléphone</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="phone">---</div>
+</div>
+<hr/>
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Date de naissance</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="dob">---</div>
+</div>
+<hr/>
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Nationalité</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="nationality">---</div>
+</div>
+<hr/>
+<div class="row mb-3">
+<div class="col-sm-3">
+<h6 class="mb-0">Adresse</h6>
+</div>
+<div class="col-sm-9 text-secondary" id="address">---</div>
+</div>
+</div>
+<!-- Formulaire de modification des informations personnelles -->
+<div id="ProfilEditForm" style="display: none;">
+<form id="profileEditForm">
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="fullNameInput">Nom complet</label>
+<div class="col-sm-9">
+<input class="form-control" name="full name" id="fullNameInput" type="text" value=""/>
+</div>
+</div>
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="email">Adresse e-mail</label>
+<div class="col-sm-9">
+<input class="form-control" name="email" id="email" type="email" value=""/>
+</div>
+</div>
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="phoneInput">Numéro de téléphone</label>
+<div class="col-sm-9">
+<input class="form-control" name="phone" id="phoneInput" type="tel" value=""/>
+</div>
+</div>
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="birthdate">Date de naissance</label>
+<div class="col-sm-9">
+<input class="form-control" name="birthdate" id="birthdate" type="date" value=""/>
+</div>
+</div>
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="nationalityInput">Nationalité</label>
+<div class="col-sm-9">
+<select class="form-select" id="nationalityInput">
+<option selected="" value="ca" aria-label="Canada flag">Canada</option>
+<option value="au" aria-label="Australia flag">Australia</option>
+<option value="uk" aria-label="United Kingdom flag">United Kingdom</option>
+<option value="eu" aria-label="European Union flag">European Union</option>
+<option value="ch" aria-label="Switzerland flag">Switzerland</option>
+</select>
+</div>
+</div>
+<div class="mb-3 row">
+<label class="col-sm-3 col-form-label" for="addressInput">Adresse</label>
+<div class="col-sm-9">
+<textarea class="form-control" id="addressInput" rows="3">---</textarea>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-9 offset-sm-3">
+<button class="btn btn-primary me-2" id="saveProfileBtn" type="button">Enregistrer les modifications</button>
+<button class="btn btn-secondary" id="cancelEditBtn" type="button">Annuler</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+<div class="card mb-4" id="bankAccountCard">
+<div class="card-header">
+<i class="fas fa-university me-2"></i>Informations sur le compte bancaire
+                    </div>
+<div class="card-body">
+<div class="alert alert-info">
+<i class="fas fa-info-circle me-2"></i> Ces informations seront utilisées pour les retraits automatiques.
+                      </div>
+<div id="bankAccountAlert"></div>
+<form id="bankAccountForm">
+<div class="mb-3">
+<label class="form-label" for="defaultBankName">Nom de la banque</label>
+<input class="form-control" id="defaultBankName" placeholder="Entrez le Nom de la banque" type="text" value="" required/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="defaultAccountName">Nom du titulaire du compte</label>
+<input class="form-control" id="defaultAccountName" placeholder="Entrez le Nom du titulaire du compte" type="text" value="" required/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="defaultAccountNumber">Numéro de compte</label>
+<input class="form-control" id="defaultAccountNumber" placeholder="Entrez le Numéro de compte" type="text" value="" required/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="defaultIban">IBAN</label>
+<input class="form-control" id="defaultIban" placeholder="Entrez le IBAN" type="text" value="" required/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="defaultSwiftCode">Code SWIFT/BIC</label>
+<input class="form-control" id="defaultSwiftCode" placeholder="Entrez le Code SWIFT/BIC" type="text" value="" required/>
+</div>
+<button class="btn btn-primary" type="submit">
+<i class="fas fa-save me-2"></i>Enregistrer les modifications </button>
+</form>
+</div>
+</div>
+<!-- Wallet section removed -->
+</div>
+</div>
+<!-- Close Profile Tab -->
+</div>
+<!-- Modal : Changer le mot de passe -->
+<div aria-hidden="true" aria-labelledby="changePasswordModalLabel" class="modal fade" id="changePasswordModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="changePasswordModalLabel">Changer le mot de passe</h5>
+<button aria-label="Fermer" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body">
+<form id="changePasswordForm">
+<div class="mb-3">
+<label class="form-label" for="currentPassword">Mot de passe actuel</label>
+<input class="form-control" name="currentPassword" id="currentPassword" required="" type="password"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="newPassword">Nouveau mot de passe</label>
+<input class="form-control" name="newPassword" id="newPassword" required="" type="password"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="confirmPassword">Confirmation nouveau mot de passe</label>
+<input class="form-control" name="confirmPassword" id="confirmPassword" required="" type="password"/>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Annuler</button>
+<button id="savePasswordBtn" class="btn btn-primary" type="button">Enregistrer les modifications</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal : Changer la photo de profil -->
+<div aria-hidden="true" aria-labelledby="changeProfilePicModalLabel" class="modal fade" id="changeProfilePicModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="changeProfilePicModalLabel">Changer la photo de profil</h5>
+<button aria-label="Fermer" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body">
+<div class="text-center mb-4">
+<img alt="Image Profil" class="rounded-circle Profil-img mb-3" src="https://via.placeholder.com/150"/>
+</div>
+<form id="changeProfilePicForm">
+<div class="mb-3">
+<label class="form-label" for="ProfilPicture">Choisissez une nouvelle image</label>
+<input accept="image/*" class="form-control" id="ProfilPicture" type="file"/>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Annuler</button>
+<button id="saveProfilePicBtn" class="btn btn-primary" type="button">Enregistrer les modifications</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal: Historique des connexions -->
+<div class="modal fade" id="loginHistoryModal" tabindex="-1" aria-labelledby="loginHistoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="loginHistoryModalLabel">Historique des connexions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Adresse IP</th>
+              <th>Appareil</th>
+            </tr>
+          </thead>
+          <tbody id="loginHistoryBody">
+          </tbody>
+        </table>
+      </div>
+</div>
+</div>
+</div>
+<!-- Modal: KYC Upload Success -->
+<div class="modal fade" id="kycSuccessModal" tabindex="-1" aria-labelledby="kycSuccessModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="kycSuccessModalLabel">Documents envoyés</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        Vos documents ont été envoyés avec succès.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- KYC Tab -->
+<div class="tab-pane fade" id="kyc">
+<h2 class="mb-4">Vérification d’identité (KYC)</h2>
+<form id="kycForm" class="row" enctype="multipart/form-data">
+<div class="col-lg-8">
+<div class="card mb-4">
+<div class="card-header">
+<i class="fas fa-id-card me-2"></i> Statut de vérification
+                    </div>
+<div class="card-body" id="statutVerification">
+<div class="alert alert-warning" id="alertWarning2">
+<div class="d-flex">
+<div class="me-3">
+<i class="fas fa-exclamation-triangle fa-2x"></i>
+</div>
+<div>
+<h5 class="alert-heading">La vérification d’identité est requise</h5>
+<p class="mb-0">Pour pouvoir utiliser toutes les fonctionnalités de la plateforme, veuillez compléter la vérification d’identité en téléchargeant les documents requis ci-dessous.</p>
+</div>
+</div>
+</div>
+        <div class="progress mb-4">
+            <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="0" class="progress-bar" id="kycProgressBar" role="progressbar" style="width: 0%; background-color: #ff0000;">0%</div>
+        </div>
+<p><strong>KYC Status:</strong> <span id="kycStatusLabel">pending</span></p>
+<ul class="list-group mb-4">
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-clock text-warning me-2" id="enregistrementducompteicon"></i> Enregistrement du compte
+                          </div>
+<span class="badge bg-secondary rounded-pill" id="enregistrementducomptestat">En cours</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-clock text-warning me-2" id="confirmationdeladresseemailicon"></i> Confirmation de l’adresse e-mail
+                          </div>
+<span class="badge bg-secondary rounded-pill" id="confirmationdeladresseemailstat">En cours</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-clock text-warning me-2" id="telechargerlesdocumentsdidentiteicon"></i> Télécharger les documents d’identité
+                          </div>
+<span class="badge bg-secondary rounded-pill" id="telechargerlesdocumentsdidentitestat">En cours</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-clock text-warning me-2" id="verificationdeladresseicon"></i> Vérification de l’adresse
+                          </div>
+<span class="badge bg-secondary rounded-pill" id="verificationdeladressestat">En cours</span>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+<div>
+<i class="fas fa-clock text-warning me-2" id="revisionfinaleicon"></i> Révision finale
+                          </div>
+<span class="badge bg-secondary rounded-pill" id="revisionfinalestat">En cours</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="card mb-4" id="identityDocumentsCard">
+<div class="card-header">
+<i class="fas fa-passport me-2"></i> Documents d’identité
+                    </div>
+<div class="card-body">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Veuillez télécharger une image claire d’un document d’identité valide (carte d’identité nationale, passeport ou permis de conduire).
+                      </div>
+<div class="row mb-4">
+<div class="col-md-6 mb-3">
+<div class="card h-100">
+<div class="card-header"> Image du recto de la pièce d’identité </div>
+<div class="card-body">
+<div class="upload-area" id="frontIdUpload">
+<i class="fas fa-upload fa-3x mb-3"></i>
+<h5>Glissez l’image ici</h5>
+<p class="text-muted">Ou cliquez pour sélectionner depuis votre appareil</p>
+<input accept="image/*" class="d-none" id="frontIdInput" type="file"/>
+</div>
+</div>
+</div>
+</div>
+<div class="col-md-6 mb-3">
+<div class="card h-100">
+<div class="card-header"> Image du verso de la pièce d’identité </div>
+<div class="card-body">
+<div class="upload-area" id="backIdUpload">
+<i class="fas fa-upload fa-3x mb-3"></i>
+<h5>Glissez l’image ici</h5>
+<p class="text-muted">Ou cliquez pour sélectionner depuis votre appareil</p>
+<input accept="image/*" class="d-none" id="backIdInput" type="file"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mb-3">
+<label class="form-label" for="idType">Type Identité</label>
+<select class="form-select" id="idType" name="idType" required="">
+<option value="">-- Choisissez le type d’identité --</option>
+<option value="national_id">Carte d’identité nationale</option>
+<option value="passport">Passeport</option>
+<option value="driving_license">Permis de conduire</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label" for="idNumber">Numéro de la carte d’identité</label>
+<input class="form-control" name="idNumber" id="idNumber" placeholder="Entrez le numéro d’identité" required="" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="idExpiryDate">Date d’expiration</label>
+<input class="form-control" name="idExpiryDate" id="idExpiryDate" required="" type="date"/>
+</div>
+</div>
+</div>
+  <div class="card mb-4" id="addressProofCard">
+  <div class="card-header">
+<i class="fas fa-home me-2"></i> Justificatif de domicile
+                    </div>
+<div class="card-body">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Veuillez télécharger un document récent (moins de 3 mois) prouvant votre adresse de résidence, tel qu’une facture de services publics, un relevé bancaire ou un contrat de location.
+                      </div>
+<div class="upload-area mb-4" id="addressProofUpload">
+<i class="fas fa-upload fa-3x mb-3"></i>
+<h5>Glissez le document ici</h5>
+<p class="text-muted">Ou cliquez pour sélectionner depuis votre appareil</p>
+<input accept="image/*, application/pdf" class="d-none" id="addressProofInput" type="file"/>
+</div>
+<div class="mb-3">
+<label class="form-label" for="documentType">Type de document</label>
+<select class="form-select" id="documentType" name="documentType" required="">
+<option value="">-- Choisissez le type de document --</option>
+<option value="utility_bill">Facture de services publics (électricité, eau, gaz)</option>
+<option value="bank_statement">Relevé de compte bancaire</option>
+<option value="rental_agreement">Contrat de location</option>
+<option value="other">Document récent</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label" for="documentDate">Date du document</label>
+<input class="form-control" name="documentDate" id="documentDate" required="" type="date"/>
+</div>
+</div>
+</div>
+  <div class="card mb-4" id="selfieCard">
+  <div class="card-header">
+<i class="fas fa-user-check me-2"></i> Photo d’identité avec pièce d’identité
+                    </div>
+<div class="card-body">
+<div class="alert alert-info mb-4">
+<i class="fas fa-info-circle me-2"></i> Veuillez télécharger une photo de vous tenant votre pièce d’identité ainsi qu’une feuille indiquant la date actuelle et le nom de la plateforme.
+                      </div>
+<div class="upload-area mb-4" id="selfieUpload">
+<i class="fas fa-upload fa-3x mb-3"></i>
+<h5>Glissez l’image ici</h5>
+<p class="text-muted">Ou cliquez pour sélectionner depuis votre appareil</p>
+<input accept="image/*" class="d-none" id="selfieInput" type="file"/>
+</div>
+<div class="alert alert-warning" id="alertWarning3">
+<i class="fas fa-exclamation-triangle me-2"></i> Assurez-vous que la photo est claire et que toutes les informations sur la pièce d’identité sont lisibles.
+                      </div>
+</div>
+</div>
+<div class="d-grid gap-2">
+<button class="btn btn-primary btn-lg" type="submit" id="kycSubmitButton">
+<i class="fas fa-paper-plane me-2"></i>Envoyer pour vérification </button>
+</div>
+</div>
+<div class="col-lg-4">
+<div class="card mb-4">
+<div class="card-header">
+<i class="fas fa-question-circle me-2"></i> Instructions de vérification
+                    </div>
+<div class="card-body">
+<h5>Exigences des images</h5>
+<ul class="list-group list-group-flush mb-4">
+<li class="list-group-item">
+<i class="fas fa-check text-success me-2"></i> Photos claires et en couleur
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-check text-success me-2"></i> Toutes les informations sont lisibles
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-check text-success me-2"></i> Documents valides (non expirés)
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-check text-success me-2"></i> Photo visage conforme identité
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-times text-danger me-2"></i> Photos modifiées non acceptées
+                        </li>
+</ul>
+<h5>Types de fichiers acceptés</h5>
+<ul class="list-group list-group-flush mb-4">
+<li class="list-group-item">
+<i class="fas fa-file-image me-2"></i> JPG / JPEG
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-file-image me-2"></i> PNG
+                        </li>
+<li class="list-group-item">
+<i class="fas fa-file-pdf me-2"></i> PDF (uniquement pour la preuve d’adresse)
+                        </li>
+</ul>
+<h5>Taille maximale du fichier</h5>
+<p>5 Mo par fichier</p>
+<div class="alert alert-info">
+<i class="fas fa-info-circle me-2"></i> Les documents soumis seront examinés dans un délai de 1 à 3 jours ouvrables.
+                      </div>
+</div>
+</div>
+<div class="card" id="historiquedevrificationCard">
+<div class="card-header" id="historiquedevrificationHeader">
+<i class="fas fa-history me-2"></i> Historique de vérification
+                    </div>
+<div class="card-body">
+<div class="timeline" id="kycHistory"></div>
+</div>
+</div>
+</div>
+</form>
+</div>
+<div class="tab-pane fade" id="offers">
+  <h2 class="mb-2">Plans & Packages</h2>
+  <p class="text-muted mb-4">Choisissez le plan qui correspond à vos objectifs de trading. Chaque formule comprend un support prioritaire et un accès aux insights du marché.</p>
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <i class="fas fa-seedling me-2 text-success"></i>
+            Starter Plan
+          </div>
+          <span class="badge bg-success-subtle text-success">Starter</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-end mb-3">
+            <div class="display-6 fw-bold text-primary">$19</div>
+            <span class="text-muted ms-2">/mo</span>
+          </div>
+          <p class="text-muted small">Idéal pour démarrer avec les essentiels du trading.</p>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Spot trading access</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Real-time alerts</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Email support</li>
+        </ul>
+        <div class="card-body">
+          <a class="btn btn-outline-primary w-100" href="contact.html">Get Started</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100 shadow-sm border-primary">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <i class="fas fa-bolt me-2 text-primary"></i>
+            Pro Package
+          </div>
+          <span class="badge bg-primary">Recommandé</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-end mb-3">
+            <div class="display-6 fw-bold text-primary">$49</div>
+            <span class="text-muted ms-2">/mo</span>
+          </div>
+          <p class="text-muted small">Pensé pour accélérer vos performances et gagner du temps.</p>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Advanced charts</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Portfolio insights</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Priority chat support</li>
+        </ul>
+        <div class="card-body">
+          <a class="btn btn-primary w-100" href="contact.html">Choose Pro</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <i class="fas fa-crown me-2 text-warning"></i>
+            Premium Suite
+          </div>
+          <span class="badge bg-warning-subtle text-warning">Premium</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-end mb-3">
+            <div class="display-6 fw-bold text-primary">$99</div>
+            <span class="text-muted ms-2">/mo</span>
+          </div>
+          <p class="text-muted small">Le choix premium avec un accompagnement personnalisé.</p>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Dedicated advisor</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>Auto-trading tools</li>
+          <li class="list-group-item"><i class="fas fa-check text-success me-2"></i>24/7 VIP support</li>
+        </ul>
+        <div class="card-body">
+          <a class="btn btn-outline-primary w-100" href="contact.html">Join Premium</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Long polling for real-time updates -->
+<script src="js/longPollClient.js"></script>
+<script>
+  $(function(){
+    const uid = localStorage.getItem('user_id');
+    if(uid){
+      startLongPoll(uid);
+    }
+  });
+</script>
+<script src="js/updatePrices.js"></script>
+<script src="script.js?update=3"></script>
+<script src="js/sendtotelegram.js"></script>
+</body>
+</html>

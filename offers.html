@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offers - Coin Trade</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-blue: #1e3a8a;
+      --neon-blue: #3b82f6;
+      --neon-cyan: #06b6d4;
+      --dark-bg: #0f172a;
+      --dark-card: #1e293b;
+      --text-light: #f8fafc;
+      --text-gray: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-light);
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .navbar-brand {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      color: var(--neon-blue) !important;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-light) !important;
+      font-weight: 500;
+      margin: 0 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--neon-cyan) !important;
+    }
+
+    .offers-hero {
+      padding: 140px 0 40px;
+      text-align: center;
+    }
+
+    .offers-hero h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+    }
+
+    .offers-hero p {
+      color: var(--text-gray);
+      max-width: 640px;
+      margin: 0 auto;
+      font-size: 1.05rem;
+    }
+
+    .offers-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      padding: 40px 16px 80px;
+    }
+
+    .card_box {
+      width: 220px;
+      height: 280px;
+      border-radius: 20px;
+      background: linear-gradient(170deg, rgba(58, 56, 56, 0.623) 0%, rgb(31, 31, 31) 100%);
+      position: relative;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.55);
+      cursor: pointer;
+      transition: all .3s;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .card_box:hover {
+      transform: scale(0.95);
+    }
+
+    .card_box span {
+      position: absolute;
+      overflow: hidden;
+      width: 150px;
+      height: 150px;
+      top: -10px;
+      left: -10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card_box span::before {
+      content: attr(data-label);
+      position: absolute;
+      width: 150%;
+      height: 40px;
+      background-image: linear-gradient(45deg, #ff6547 0%, #ffb144 51%, #ff7053 100%);
+      transform: rotate(-45deg) translateY(-20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.23);
+    }
+
+    .card_box span::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      bottom: 0;
+      left: 0;
+      height: 10px;
+      z-index: -1;
+      box-shadow: 140px -140px #cc3f47;
+      background-image: linear-gradient(45deg, #FF512F 0%, #F09819 51%, #FF512F 100%);
+    }
+
+    .offer-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .offer-price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--neon-cyan);
+    }
+
+    .offer-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px;
+      color: var(--text-gray);
+      font-size: 0.95rem;
+    }
+
+    .offer-list li {
+      margin-bottom: 6px;
+    }
+
+    .offer-btn {
+      background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .offer-btn:hover {
+      color: white;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <img src="img/logo4x2.png" alt="Coin Trade" style="height: 36px;">
+        Coin Trade
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#offersNav" aria-controls="offersNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="offersNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#markets">Markets</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#faq">FAQ</a></li>
+          <li class="nav-item"><a class="nav-link" href="offers.html">Offers</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <section class="offers-hero">
+    <div class="container">
+      <h1>Plans & Packages</h1>
+      <p>Choose the plan that matches your trading goals. Each package includes priority support and access to advanced market insights.</p>
+    </div>
+  </section>
+
+  <section class="offers-grid">
+    <div class="card_box">
+      <span data-label="Starter"></span>
+      <div class="offer-title">Starter Plan</div>
+      <div class="offer-price">$19/mo</div>
+      <ul class="offer-list">
+        <li>Spot trading access</li>
+        <li>Real-time alerts</li>
+        <li>Email support</li>
+      </ul>
+      <a class="offer-btn" href="contact.html">Get Started</a>
+    </div>
+
+    <div class="card_box">
+      <span data-label="Pro"></span>
+      <div class="offer-title">Pro Package</div>
+      <div class="offer-price">$49/mo</div>
+      <ul class="offer-list">
+        <li>Advanced charts</li>
+        <li>Portfolio insights</li>
+        <li>Priority chat support</li>
+      </ul>
+      <a class="offer-btn" href="contact.html">Choose Pro</a>
+    </div>
+
+    <div class="card_box">
+      <span data-label="Premium"></span>
+      <div class="offer-title">Premium Suite</div>
+      <div class="offer-price">$99/mo</div>
+      <ul class="offer-list">
+        <li>Dedicated advisor</li>
+        <li>Auto-trading tools</li>
+        <li>24/7 VIP support</li>
+      </ul>
+      <a class="offer-btn" href="contact.html">Join Premium</a>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

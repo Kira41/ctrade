@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Administrateur</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .table th {
+            border-top: none;
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        /* Recent Activity styling */
+        .recent-activity-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 0.5rem 1rem;
+        }
+        .recent-activity-card .card-header h5 {
+            font-size: 1rem;
+        }
+        #recentActivity {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        #recentActivity .list-group-item {
+            font-size: 0.875rem;
+            padding: 0.35rem 0.75rem;
+            border: none;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        #recentActivity .list-group-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="loginSection" class="container mt-5" style="max-width: 400px; display:none;">
+        <h2 class="mb-3">Connexion Admin</h2>
+        <form id="adminLoginForm">
+            <div class="mb-3">
+                <label for="loginIdentifier" class="form-label">Identifiant</label>
+                <input type="text" class="form-control" id="loginIdentifier" placeholder="alone" autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="loginPassword" class="form-label">Mot de passe</label>
+                <input type="password" class="form-control" id="loginPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+        </form>
+    </div>
+
+    <div id="dashboardContainer" class="container-fluid" style="display:none;">
+        <div class="row flex-column flex-md-row">
+            <!-- Sidebar -->
+            <div class="col-12 col-md-3 col-lg-2 px-0">
+                <div class="sidebar d-flex flex-column p-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">
+                            <i class="bi bi-shield-check"></i>
+                            Admin Panel
+                        </h4>
+                    </div>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link active" data-section="home">
+                                <i class="bi bi-house-door me-2"></i>
+                                Accueil
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link" data-section="users">
+                                <i class="bi bi-people me-2"></i>
+                                Utilisateurs
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2" id="agentsNavItem" style="display:none;">
+                            <a href="#" class="nav-link" data-section="agents">
+                                <i class="bi bi-person-badge me-2"></i>
+                                Agents
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link" data-section="transactions">
+                                <i class="bi bi-credit-card me-2"></i>
+                                Transactions
+                            </a>
+                        </li>
+                        <li class="nav-item mb-2">
+                            <a href="#" class="nav-link" data-section="kyc">
+                                <i class="bi bi-person-check me-2"></i>
+                                Vérification KYC
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-auto">
+                        <div class="text-center">
+                            <small class="text-white-50">© 2025 Admin Dashboard</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-12 col-md-9 col-lg-10">
+                <div class="main-content p-4">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">Tableau de Bord</h2>
+                        <div class="d-flex align-items-center">
+                            <span class="me-3">Bienvenue, Administrateur</span>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" id="adminAccountDropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminAccountDropdown" style="min-width: 250px;">
+                                    <li class="dropdown-header text-center">
+                                        <img alt="Image Utilisateur" class="rounded-circle mb-2" src="img/logo.png" style="width: 60px; height: 60px;"/>
+                                        <div class="fw-bold">Administrateur</div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"/></li>
+                                    <li><a class="dropdown-item" href="#" id="settingsLink"><i class="bi bi-gear me-2"></i>Paramètres</a></li>
+                                    <li><a class="dropdown-item" href="#" id="logoutLink"><i class="bi bi-box-arrow-right me-2"></i>Déconnexion</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Home Section -->
+                    <div id="home-section" class="content-section active">
+                        <div class="d-flex justify-content-end mb-2">
+                            <select id="statsPeriodSelect" class="form-select w-auto">
+                                <option value="daily">Journalier</option>
+                                <option value="weekly">Hebdomadaire</option>
+                                <option value="monthly">Mensuel</option>
+                                <option value="all" selected>Tout</option>
+                            </select>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-people fs-1 mb-2"></i>
+                                        <h3 id="statTotalUsers" class="mb-1"></h3>
+                                        <p class="mb-0">Utilisateurs Total</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-credit-card fs-1 mb-2"></i>
+                                        <h3 id="statTotalDeposits" class="mb-1"></h3>
+                                        <p class="mb-0">Total Dépôts</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-stack fs-1 mb-2"></i>
+                                        <h3 id="statDepositCount" class="mb-1"></h3>
+                                        <p class="mb-0">Nombre de dépôts</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-check-circle fs-1 mb-2"></i>
+                                        <h3 id="statSuccessRate" class="mb-1"></h3>
+                                        <p class="mb-0">Taux de Réussite</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row align-items-stretch">
+                            <div class="col-md-8 mb-3 d-flex">
+                                <div class="card recent-activity-card w-100 h-100">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Activité Récente</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="recentActivity" class="list-group list-group-flush"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex">
+                                <div class="card w-100 h-100 d-flex flex-column">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Notifications</h5>
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <input id="notificationUserIds" class="form-control mb-2" placeholder="ID utilisateur(s) séparés par des virgules (vide pour tous)">
+                                        <textarea id="customNotification" class="form-control mb-3 flex-grow-1" rows="3" placeholder="Écrire une notification..."></textarea>
+                                        <button class="btn btn-primary mb-3 d-flex align-items-center" id="sendCustomNotification"><i class="bi bi-send me-2"></i>Envoyer</button>
+                                        <div class="d-grid gap-2 mt-auto">
+                                            <button class="btn btn-outline-primary d-flex align-items-center justify-content-center" id="notifyUpdateBtn"><i class="bi bi-arrow-repeat me-2"></i>Mise à jour du système</button>
+                                            <input type="date" class="form-control" id="updateDate" style="display:none;">
+                                            <button class="btn btn-outline-primary d-flex align-items-center justify-content-center" id="notifyKycBtn"><i class="bi bi-person-badge me-2"></i>Vérification KYC requise</button>
+                                            <button class="btn btn-outline-primary d-flex align-items-center justify-content-center" id="notifyMaintenanceBtn"><i class="bi bi-tools me-2"></i>Problème de paiement / Maintenance</button>
+                      </div>
+                  </div>
+              </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Gestion des Utilisateurs</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Créer Utilisateur
+                            </button>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">Liste des Utilisateurs</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input id="usersSearchInput" type="text" class="form-control" placeholder="Rechercher un utilisateur...">
+                                            <button class="btn btn-outline-secondary" type="button">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nom</th>
+                                                <th>Email</th>
+                                                <th id="linkedToHeader" style="display:none;">Lié à</th>
+                                                <th>Rôle</th>
+                                                <th>Statut</th>
+                                                <th>Date d'inscription</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usersTableBody">
+</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <nav>
+                                    <ul class="pagination justify-content-center mb-0" id="usersPagination"></ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agents Section -->
+                    <div id="agents-section" class="content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Gestion des Agents</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAgentModal">
+                                <i class="bi bi-person-badge me-2"></i>
+                                Créer Agent
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Liste des Agents</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Email</th>
+                                                <th>Rôle</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="agentsTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transactions Section -->
+                    <div id="transactions-section" class="content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Gestion des Transactions</h3>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary">
+                                    <i class="bi bi-download me-2"></i>
+                                    Exporter
+                                </button>
+                                <button class="btn btn-outline-primary">
+                                    <i class="bi bi-funnel me-2"></i>
+                                    Filtrer
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">Transactions Récentes (10 par page)</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" placeholder="Rechercher une transaction..." id="txSearchInput">
+                                            <button class="btn btn-outline-secondary" type="button">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-md-6 mb-2">
+                                        <select id="txFilterType" class="form-select">
+                                            <option value="all">Tous les types</option>
+                                            <option value="Dépôt">Dépôt</option>
+                                            <option value="Retrait">Retrait</option>
+                                            <option value="Trading">Trading</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <select id="txFilterStatus" class="form-select">
+                                            <option value="all">Tous les statuts</option>
+                                            <option value="complet">complet</option>
+                                            <option value="En cours">En cours</option>
+                                            <option value="reject">reject</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Opération</th>
+                                                <th>Utilisateur</th>
+                                                <th>Type</th>
+                                                <th>Montant</th>
+                                                <th>Statut</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                    <tbody id="transactionsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <nav>
+                                <ul class="pagination justify-content-center mb-0" id="transactionsPagination"></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- KYC Section -->
+                    <div id="kyc-section" class="content-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Vérification KYC</h3>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-success" id="approveAllKycBtn">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Approuver Tout
+                                </button>
+                                <button class="btn btn-outline-danger" id="rejectSelectedKycBtn">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Rejeter Sélectionnés
+                                </button>
+                                <button class="btn btn-outline-secondary" id="showAllDocsButton" style="display:none;">
+                                    <i class="bi bi-archive"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Demandes KYC en Attente</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input type="checkbox" class="form-check-input" id="selectAllKyc">
+                                                </th>
+                                                <th>Utilisateur</th>
+                                                <th>Type de Document</th>
+                                                <th>Date de Soumission</th>
+                                                <th>Statut</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="kycRequestsTable">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer un Nouvel Utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Mot de Passe</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmer le Mot de Passe</label>
+                                <input type="password" class="form-control" id="confirmPassword" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sécurité du mot de passe</label>
+                            <div class="d-flex align-items-center">
+                                <span id="passwordStrength" class="badge bg-danger me-2">Faible</span>
+                                <div class="progress flex-grow-1">
+                                    <div id="passwordStrengthBar" class="progress-bar bg-danger" role="progressbar" style="width:0%" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="mt-3">Coordonnées bancaires pour les dépôts</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="createBwBankName" class="form-label">Nom de la banque</label>
+                                <input type="text" class="form-control" id="createBwBankName" name="bw_widhrawBankName">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="createBwAccountName" class="form-label">Nom du titulaire du compte</label>
+                                <input type="text" class="form-control" id="createBwAccountName" name="bw_widhrawAccountName">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="createBwAccountNumber" class="form-label">Numéro de compte</label>
+                                <input type="text" class="form-control" id="createBwAccountNumber" name="bw_widhrawAccountNumber">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="createBwIban" class="form-label">IBAN</label>
+                                <input type="text" class="form-control" id="createBwIban" name="bw_widhrawIban">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="createBwSwiftCode" class="form-label">Code SWIFT/BIC</label>
+                            <input type="text" class="form-control" id="createBwSwiftCode" name="bw_widhrawSwiftCode">
+                        </div>
+                        <h6 class="mt-3">Adresses crypto de dépôt</h6>
+                        <div id="createCryptoAddresses"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="addCreateCryptoAddr">Ajouter une adresse</button>
+                        <!-- role field removed: user creation always creates a standard account -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="createUser()">Créer Utilisateur</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Agent Modal -->
+    <div class="modal fade" id="createAgentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer un Nouvel Agent</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAgentForm">
+                        <div class="mb-3">
+                            <label for="agentEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="agentEmail" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="agentPassword" class="form-label">Mot de Passe</label>
+                                <input type="password" class="form-control" id="agentPassword" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="agentConfirm" class="form-label">Confirmer le Mot de Passe</label>
+                                <input type="password" class="form-control" id="agentConfirm" required>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="agentRoleContainer" style="display: none;">
+                            <label for="agentRole" class="form-label">Type de Compte</label>
+                            <select class="form-select" id="agentRole">
+                                <option value="0">Agent</option>
+                                <option value="1">Administrateur</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="createAgent()">Créer Agent</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Agent Modal -->
+    <div class="modal fade" id="editAgentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier Agent</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAgentForm">
+                        <input type="hidden" id="editAgentId">
+                        <div class="mb-3">
+                            <label for="editAgentEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editAgentEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAgentRole" class="form-label">Type de Compte</label>
+                            <select class="form-select" id="editAgentRole">
+                                <option value="0">Agent</option>
+                                <option value="1">Administrateur</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAgentOldPassword" class="form-label">Ancien mot de passe</label>
+                            <input type="password" class="form-control" id="editAgentOldPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAgentNewPassword" class="form-label">Nouveau mot de passe</label>
+                            <input type="password" class="form-control" id="editAgentNewPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAgentConfirm" class="form-label">Confirmer le mot de passe</label>
+                            <input type="password" class="form-control" id="editAgentConfirm">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="saveEditAgent">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Modal -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails Utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Nom:</strong> <span id="viewFullName"></span></p>
+                    <p><strong>Email:</strong> <span id="viewEmail"></span></p>
+                    <p><strong>Téléphone:</strong> <span id="viewPhone"></span></p>
+                    <p><strong>Date d'inscription:</strong> <span id="viewCreated"></span></p>
+                    <p><strong>Note FTD:</strong> <span id="viewFtdNote"></span></p>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" id="viewKycBar" role="progressbar" style="width:0%">0%</div>
+                    </div>
+                    <p><strong>KYC Status:</strong> <span id="viewKycLabel">pending</span></p>
+                    <h6 class="mt-3">Dépôts récents</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Date</th><th>Montant</th><th>Méthode</th><th>Statut</th></tr>
+                        </thead>
+                        <tbody id="viewDeposits"></tbody>
+                    </table>
+                    <h6 class="mt-3">Retraits récents</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Date</th><th>Montant</th><th>Méthode</th><th>Statut</th></tr>
+                        </thead>
+                        <tbody id="viewWithdrawals"></tbody>
+                    </table>
+                    <h6 class="mt-3">Historique de Trading</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Temps</th><th>Paire</th><th>Type</th><th>Montant</th><th>Prix</th><th>Statut</th><th>Profit/Perte</th></tr>
+                        </thead>
+                        <tbody id="viewTrading"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Deposit Modal -->
+    <div class="modal fade" id="manualDepositModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dépôt manuel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="manualDepositForm">
+                        <input type="hidden" id="manualDepositUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Utilisateur</label>
+                            <div class="form-control-plaintext" id="manualDepositUserLabel">-</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="manualDepositAmount" class="form-label">Montant</label>
+                            <input type="number" class="form-control" id="manualDepositAmount" min="0" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="manualDepositType" class="form-label">Type</label>
+                            <select class="form-select" id="manualDepositType" required>
+                                <option value="Depot">Depot</option>
+                                <option value="Bonus">Bonus</option>
+                                <option value="Ajustement">Ajustement</option>
+                                <option value="Retrait">Retrait</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info small mb-0">
+                            Le type sélectionné sera enregistré dans la colonne « Méthode ».
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="manualDepositForm" class="btn btn-success">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FTD Modal -->
+    <div class="modal fade" id="ftdModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Formulaire FTD</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ftdForm">
+                        <input type="hidden" id="ftdUserId" name="user_id">
+                        <h6>1. Informations générales</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="ftdFullName" class="form-label">Nom complet</label>
+                                <input type="text" class="form-control" id="ftdFullName" name="full_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ftdEmail" class="form-label">Adresse e-mail</label>
+                                <input type="email" class="form-control" id="ftdEmail" name="email">
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="ftdPhone" class="form-label">Numéro de téléphone</label>
+                                <input type="text" class="form-control" id="ftdPhone" name="phone">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ftdCrmId" class="form-label">ID CRM</label>
+                                <input type="text" class="form-control" id="ftdCrmId" name="crm_id">
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="ftdNationality" class="form-label">Nationalité</label>
+                                <input type="text" class="form-control" id="ftdNationality" name="nationality">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="ftdAge" class="form-label">Âge</label>
+                                <input type="number" class="form-control" id="ftdAge" name="age">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="ftdProfession" class="form-label">Profession</label>
+                                <input type="text" class="form-control" id="ftdProfession" name="profession">
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4">2. Évaluation du client</h6>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Difficulté du client (sur 5)</label>
+                            <div class="btn-group" role="group" aria-label="difficulté du client">
+                                <input type="radio" class="btn-check" name="client_difficulty" id="difficulty1" value="1">
+                                <label class="btn btn-outline-warning" for="difficulty1"><i class="fas fa-star"></i></label>
+                                <input type="radio" class="btn-check" name="client_difficulty" id="difficulty2" value="2">
+                                <label class="btn btn-outline-warning" for="difficulty2"><i class="fas fa-star"></i></label>
+                                <input type="radio" class="btn-check" name="client_difficulty" id="difficulty3" value="3">
+                                <label class="btn btn-outline-warning" for="difficulty3"><i class="fas fa-star"></i></label>
+                                <input type="radio" class="btn-check" name="client_difficulty" id="difficulty4" value="4">
+                                <label class="btn btn-outline-warning" for="difficulty4"><i class="fas fa-star"></i></label>
+                                <input type="radio" class="btn-check" name="client_difficulty" id="difficulty5" value="5">
+                                <label class="btn btn-outline-warning" for="difficulty5"><i class="fas fa-star"></i></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdPotential" class="form-label">Potentiel du client (sur 5)</label>
+                            <select class="form-select" id="ftdPotential" name="client_potential">
+                                <option value="" selected>Aucune réponse sélectionnée</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdTechComfortable" class="form-label">À l'aise techniquement</label>
+                            <select class="form-select" id="ftdTechComfortable" name="technically_comfortable">
+                                <option value="" selected>Aucune réponse sélectionnée</option>
+                                <option value="yes">Oui</option>
+                                <option value="no">Non</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdAnydesk" class="form-label">Anydesk installé</label>
+                            <select class="form-select" id="ftdAnydesk" name="anydesk_installed">
+                                <option value="" selected>Aucune réponse sélectionnée</option>
+                                <option value="yes">Oui</option>
+                                <option value="no">Non</option>
+                            </select>
+                        </div>
+
+                        <h6 class="mt-4">3. Informations sur l'appel</h6>
+                        <div class="mb-3">
+                            <label for="ftdCallDuration" class="form-label">Durée de l'appel (en minutes)</label>
+                            <input type="number" class="form-control" id="ftdCallDuration" name="call_duration">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdResistanceLevel" class="form-label">Niveau de résistance</label>
+                            <select class="form-select" id="ftdResistanceLevel" name="resistance_level">
+                                <option value="" selected>Aucune réponse sélectionnée</option>
+                                <option value="R0">R0</option>
+                                <option value="R1">R1</option>
+                                <option value="R2">R2</option>
+                                <option value="R3">R3</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type(s) de résistance rencontré(s)</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Financial" id="resFinancial" name="resistance_types">
+                                        <label class="form-check-label" for="resFinancial">Financière</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Time-related" id="resTime" name="resistance_types">
+                                        <label class="form-check-label" for="resTime">Liée au temps</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Trust" id="resTrust" name="resistance_types">
+                                        <label class="form-check-label" for="resTrust">Confiance</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Technical" id="resTechnical" name="resistance_types">
+                                        <label class="form-check-label" for="resTechnical">Technique</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Avoidance" id="resAvoidance" name="resistance_types">
+                                        <label class="form-check-label" for="resAvoidance">Évitement</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="Lack of understanding" id="resLack" name="resistance_types">
+                                        <label class="form-check-label" for="resLack">Manque de compréhension</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdCallNotes" class="form-label">Notes sur l'appel</label>
+                            <textarea class="form-control" id="ftdCallNotes" name="call_notes" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdGeneralImpression" class="form-label">Impression générale / Notes</label>
+                            <textarea class="form-control" id="ftdGeneralImpression" name="general_impression" rows="2"></textarea>
+                        </div>
+
+                        <h6 class="mt-4">4. Suivi</h6>
+                        <div class="mb-3">
+                            <label for="ftdAppointmentSet" class="form-label">Rendez-vous fixé</label>
+                            <select class="form-select" id="ftdAppointmentSet" name="appointment_set">
+                                <option value="" selected>Aucune réponse sélectionnée</option>
+                                <option value="yes">Oui</option>
+                                <option value="no">Non</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="ftdAppointmentDateContainer" style="display:none;">
+                            <label for="ftdAppointmentDate" class="form-label">Date et heure</label>
+                            <input type="datetime-local" class="form-control" id="ftdAppointmentDate" name="appointment_datetime">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ftdAdditionalComments" class="form-label">Commentaires / Observations supplémentaires</label>
+                            <textarea class="form-control" id="ftdAdditionalComments" name="additional_comments" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="saveFtd">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier Utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div id="editUserFields" class="row g-3"></div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="editPassword" class="form-label">Nouveau mot de passe</label>
+                                <input type="password" class="form-control" id="editPassword">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editPasswordConfirm" class="form-label">Confirmer le mot de passe</label>
+                                <input type="password" class="form-control" id="editPasswordConfirm">
+                            </div>
+                        </div>
+                        <h6 class="mt-3">Coordonnées bancaires pour les dépôts</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="editBwBankName" class="form-label">Nom de la banque</label>
+                                <input type="text" class="form-control" id="editBwBankName" name="bw_widhrawBankName">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editBwAccountName" class="form-label">Nom du titulaire du compte</label>
+                                <input type="text" class="form-control" id="editBwAccountName" name="bw_widhrawAccountName">
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="editBwAccountNumber" class="form-label">Numéro de compte</label>
+                                <input type="text" class="form-control" id="editBwAccountNumber" name="bw_widhrawAccountNumber">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editBwIban" class="form-label">IBAN</label>
+                                <input type="text" class="form-control" id="editBwIban" name="bw_widhrawIban">
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-2">
+                            <label for="editBwSwiftCode" class="form-label">Code SWIFT/BIC</label>
+                            <input type="text" class="form-control" id="editBwSwiftCode" name="bw_widhrawSwiftCode">
+                        </div>
+                        <h6 class="mt-3">Adresses crypto de dépôt</h6>
+                        <div id="editCryptoAddresses"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="addEditCryptoAddr">Ajouter une adresse</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-success" id="finalReviewBtn" style="display:none">Marquer révision finale</button>
+                    <button type="button" class="btn btn-primary" id="saveEditUser">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Details Modal -->
+    <div class="modal fade" id="kycModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails de la Vérification KYC</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informations Utilisateur</h6>
+                            <p><strong>Nom:</strong> <span id="kycUserName"></span></p>
+                            <p><strong>Email:</strong> <span id="kycUserEmail"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Document Soumis</h6>
+                            <div class="mb-3 text-center">
+                                <img id="kycModalImage" src="about:blank" class="img-fluid border rounded" alt="Document">
+                                <p class="mt-2"><small id="kycModalFilename"></small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="kycRejectBtn">Rejeter</button>
+                    <button type="button" class="btn btn-success" id="kycApproveBtn">Approuver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Settings Modal -->
+    <div class="modal fade" id="adminSettingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Paramètres du Compte</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adminSettingsForm">
+                        <div class="mb-3">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" id="settingsAdminId" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="settingsEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="settingsEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="settingsOldPassword" class="form-label">Ancien mot de passe</label>
+                            <input type="password" class="form-control" id="settingsOldPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label for="settingsNewPassword" class="form-label">Nouveau mot de passe</label>
+                            <input type="password" class="form-control" id="settingsNewPassword">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="saveAdminSettings">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal fade" id="editTransactionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="editTransactionForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier la transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editTxId">
+                    <input type="hidden" id="editTxOldProfit">
+                    <input type="hidden" id="editTxOldPrice">
+                    <input type="hidden" id="editTxQuantity">
+                    <div class="mb-3">
+                        <label for="editTxProfit" class="form-label">Profit/Perte</label>
+                        <input type="number" step="0.01" class="form-control" id="editTxProfit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTxPrice" class="form-label">Le prix</label>
+                        <input type="number" step="0.01" class="form-control" id="editTxPrice" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            
+            // Handle navigation clicks
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    sections.forEach(section => section.classList.remove('active'));
+                    
+                    // Show target section
+                    const targetSection = this.getAttribute('data-section');
+                    document.getElementById(targetSection + '-section').classList.add('active');
+                    if (targetSection === 'transactions') { TX_PAGE = 1; loadTransactions(); }
+                });
+            });
+            
+            // Handle quick action buttons
+            document.querySelectorAll('[data-section]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetSection = this.getAttribute('data-section');
+
+                    // Update navigation
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    document.querySelector(`[data-section="${targetSection}"]`).classList.add('active');
+
+                    // Show target section
+                    sections.forEach(section => section.classList.remove('active'));
+                    document.getElementById(targetSection + '-section').classList.add('active');
+                    if (targetSection === 'transactions') { TX_PAGE = 1; loadTransactions(); }
+                });
+            });
+            const statsSelect = document.getElementById('statsPeriodSelect');
+            if (statsSelect) {
+                statsSelect.addEventListener('change', function() {
+                    STATS_PERIOD = this.value;
+                    loadAdminData();
+                });
+            }
+            checkAuth();
+            const pwdInput = document.getElementById('password');
+            if (pwdInput) {
+                pwdInput.addEventListener('input', function() {
+                    const score = computePasswordStrength(pwdInput.value);
+                    updateStrengthUI(score);
+                });
+            }
+
+            const addCreateBtn = document.getElementById('addCreateCryptoAddr');
+            if (addCreateBtn) addCreateBtn.addEventListener('click', function() {
+                const cont = document.getElementById('createCryptoAddresses');
+                if (cont) createCryptoRow(cont);
+            });
+            const addEditBtn = document.getElementById('addEditCryptoAddr');
+            if (addEditBtn) addEditBtn.addEventListener('click', function() {
+                const cont = document.getElementById('editCryptoAddresses');
+                if (cont) createCryptoRow(cont);
+            });
+
+            const createModal = document.getElementById('createUserModal');
+            if (createModal) createModal.addEventListener('show.bs.modal', function() {
+                const cont = document.getElementById('createCryptoAddresses');
+                if (cont) {
+                    cont.innerHTML = '';
+                    createCryptoRow(cont);
+                }
+            });
+        });
+
+        let ADMIN_ID = null;
+        let ADMIN_EMAIL = '';
+        let IS_ADMIN = 0;
+        let IS_SUPER_ADMIN = false;
+        let ALL_USERS = [];
+        let USERS_PAGE = 1;
+        const USERS_PAGE_SIZE = 10;
+        let USERS_TOTAL_PAGES = 1;
+        let STATS_PERIOD = 'all';
+        let CURRENT_TX_TYPE = 'Trading';
+
+        // Minimal MD5 implementation used to hash passwords client-side
+        function md5(str) {
+            function cmn(q, a, b, x, s, t) {
+                a = (a + q + x + t) | 0;
+                return (((a << s) | (a >>> (32 - s))) + b) | 0;
+            }
+            function ff(a, b, c, d, x, s, t) { return cmn((b & c) | (~b & d), a, b, x, s, t); }
+            function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & ~d), a, b, x, s, t); }
+            function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+            function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | ~d), a, b, x, s, t); }
+
+            function md5cycle(x, k) {
+                let a = x[0], b = x[1], c = x[2], d = x[3];
+                a = ff(a, b, c, d, k[0], 7 , -680876936);
+                d = ff(d, a, b, c, k[1], 12, -389564586);
+                c = ff(c, d, a, b, k[2], 17,  606105819);
+                b = ff(b, c, d, a, k[3], 22, -1044525330);
+                a = ff(a, b, c, d, k[4], 7 , -176418897);
+                d = ff(d, a, b, c, k[5], 12,  1200080426);
+                c = ff(c, d, a, b, k[6], 17, -1473231341);
+                b = ff(b, c, d, a, k[7], 22, -45705983);
+                a = ff(a, b, c, d, k[8], 7 ,  1770035416);
+                d = ff(d, a, b, c, k[9], 12, -1958414417);
+                c = ff(c, d, a, b, k[10],17, -42063);
+                b = ff(b, c, d, a, k[11],22, -1990404162);
+                a = ff(a, b, c, d, k[12],7 ,  1804603682);
+                d = ff(d, a, b, c, k[13],12, -40341101);
+                c = ff(c, d, a, b, k[14],17, -1502002290);
+                b = ff(b, c, d, a, k[15],22,  1236535329);
+
+                a = gg(a, b, c, d, k[1], 5 , -165796510);
+                d = gg(d, a, b, c, k[6], 9 , -1069501632);
+                c = gg(c, d, a, b, k[11],14,  643717713);
+                b = gg(b, c, d, a, k[0], 20, -373897302);
+                a = gg(a, b, c, d, k[5], 5 , -701558691);
+                d = gg(d, a, b, c, k[10],9 ,  38016083);
+                c = gg(c, d, a, b, k[15],14, -660478335);
+                b = gg(b, c, d, a, k[4], 20, -405537848);
+                a = gg(a, b, c, d, k[9], 5 ,  568446438);
+                d = gg(d, a, b, c, k[14],9 , -1019803690);
+                c = gg(c, d, a, b, k[3], 14, -187363961);
+                b = gg(b, c, d, a, k[8], 20,  1163531501);
+                a = gg(a, b, c, d, k[13],5 , -1444681467);
+                d = gg(d, a, b, c, k[2], 9 , -51403784);
+                c = gg(c, d, a, b, k[7], 14,  1735328473);
+                b = gg(b, c, d, a, k[12],20, -1926607734);
+
+                a = hh(a, b, c, d, k[5], 4 , -378558);
+                d = hh(d, a, b, c, k[8], 11, -2022574463);
+                c = hh(c, d, a, b, k[11],16,  1839030562);
+                b = hh(b, c, d, a, k[14],23, -35309556);
+                a = hh(a, b, c, d, k[1], 4 , -1530992060);
+                d = hh(d, a, b, c, k[4], 11,  1272893353);
+                c = hh(c, d, a, b, k[7], 16, -155497632);
+                b = hh(b, c, d, a, k[10],23, -1094730640);
+                a = hh(a, b, c, d, k[13],4 ,  681279174);
+                d = hh(d, a, b, c, k[0], 11, -358537222);
+                c = hh(c, d, a, b, k[3], 16, -722521979);
+                b = hh(b, c, d, a, k[6], 23,  76029189);
+                a = hh(a, b, c, d, k[9], 4 , -640364487);
+                d = hh(d, a, b, c, k[12],11, -421815835);
+                c = hh(c, d, a, b, k[15],16,  530742520);
+                b = hh(b, c, d, a, k[2], 23, -995338651);
+
+                a = ii(a, b, c, d, k[0], 6 , -198630844);
+                d = ii(d, a, b, c, k[7], 10,  1126891415);
+                c = ii(c, d, a, b, k[14],15, -1416354905);
+                b = ii(b, c, d, a, k[5], 21, -57434055);
+                a = ii(a, b, c, d, k[12],6 ,  1700485571);
+                d = ii(d, a, b, c, k[3], 10, -1894986606);
+                c = ii(c, d, a, b, k[10],15, -1051523);
+                b = ii(b, c, d, a, k[1], 21, -2054922799);
+                a = ii(a, b, c, d, k[8], 6 ,  1873313359);
+                d = ii(d, a, b, c, k[15],10, -30611744);
+                c = ii(c, d, a, b, k[6], 15, -1560198380);
+                b = ii(b, c, d, a, k[13],21,  1309151649);
+                a = ii(a, b, c, d, k[4], 6 , -145523070);
+                d = ii(d, a, b, c, k[11],10, -1120210379);
+                c = ii(c, d, a, b, k[2], 15,  718787259);
+                b = ii(b, c, d, a, k[9], 21, -343485551);
+
+                x[0] = (a + x[0]) | 0;
+                x[1] = (b + x[1]) | 0;
+                x[2] = (c + x[2]) | 0;
+                x[3] = (d + x[3]) | 0;
+            }
+
+            function md51(s) {
+                const txt = unescape(encodeURIComponent(s));
+                const n = txt.length;
+                const state = [1732584193, -271733879, -1732584194, 271733878];
+                for (let i = 64; i <= n; i += 64) {
+                    md5cycle(state, md5blk(txt.substring(i - 64, i)));
+                }
+                let tail = new Array(16).fill(0);
+                let i = 0;
+                for (; i < n % 64; i++) {
+                    tail[i >> 2] |= txt.charCodeAt(n - (n % 64) + i) << ((i % 4) << 3);
+                }
+                tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+                if (i > 55) {
+                    md5cycle(state, tail);
+                    tail = new Array(16).fill(0);
+                }
+                tail[14] = n * 8;
+                md5cycle(state, tail);
+                return state;
+            }
+
+            function md5blk(s) {
+                const md5blks = [];
+                for (let i = 0; i < 64; i += 4) {
+                    md5blks[i >> 2] = s.charCodeAt(i) +
+                        (s.charCodeAt(i + 1) << 8) +
+                        (s.charCodeAt(i + 2) << 16) +
+                        (s.charCodeAt(i + 3) << 24);
+                }
+                return md5blks;
+            }
+
+            function rhex(n) {
+                let s = '';
+                for (let j = 0; j < 4; j++) {
+                    s += ((n >> (j * 8 + 4)) & 0x0f).toString(16) +
+                        ((n >> (j * 8)) & 0x0f).toString(16);
+                }
+                return s;
+            }
+
+            function hex(x) { return x.map(rhex).join(''); }
+
+            return hex(md51(str));
+        }
+
+        function computePasswordStrength(pwd) {
+            let score = 0;
+            if (pwd.length >= 6) score += 5;
+            if (pwd.length >= 8) score += 30;
+            if (/[A-Z]/.test(pwd)) score += 20;
+            if (/[0-9]/.test(pwd)) score += 20;
+            if (/[^A-Za-z0-9]/.test(pwd)) score += 30;
+            return Math.min(score, 100);
+        }
+
+        function strengthLabel(score) {
+            if (score >= 90) return 'Fort';
+            if (score >= 50) return 'Moyen';
+            return 'Faible';
+        }
+
+        function barClass(score) {
+            if (score >= 70) return 'bg-success';
+            if (score >= 40) return 'bg-warning';
+            return 'bg-danger';
+        }
+
+        function updateStrengthUI(score) {
+            const label = document.getElementById('passwordStrength');
+            const bar = document.getElementById('passwordStrengthBar');
+            if (!label || !bar) return;
+            const cls = barClass(score);
+            label.textContent = strengthLabel(score);
+            label.classList.remove('bg-success','bg-warning','bg-danger');
+            label.classList.add(cls);
+            bar.style.width = score + '%';
+            bar.setAttribute('aria-valuenow', score);
+            bar.classList.remove('bg-success','bg-warning','bg-danger');
+            bar.classList.add(cls);
+        }
+
+        function createCryptoRow(container, crypto = '', info = '') {
+            const div = document.createElement('div');
+            div.className = 'row g-3 mb-2 crypto-row';
+            div.innerHTML = `
+                <div class="col-md-5"><input type="text" class="form-control crypto-name" placeholder="Crypto" value="${escapeHtml(crypto)}"></div>
+                <div class="col-md-5"><input type="text" class="form-control wallet-info" placeholder="Adresse" value="${escapeHtml(info)}"></div>
+                <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-outline-danger remove-crypto-row">&times;</button></div>`;
+            container.appendChild(div);
+        }
+
+        function gatherCryptoAddresses(containerId) {
+            const arr = [];
+            document.querySelectorAll('#' + containerId + ' .crypto-row').forEach(r => {
+                const name = r.querySelector('.crypto-name').value.trim();
+                const info = r.querySelector('.wallet-info').value.trim();
+                if (name && info) arr.push({ crypto_name: name, wallet_info: info });
+            });
+            return arr;
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-crypto-row')) {
+                e.target.closest('.crypto-row')?.remove();
+            }
+        });
+
+        function fetchWithAuth(url, options = {}) {
+            options.headers = options.headers || {};
+            if (ADMIN_ID) options.headers['Authorization'] = 'Bearer ' + ADMIN_ID;
+            // Always include credentials so PHP sessions work correctly
+            options.credentials = 'include';
+            return fetch(url, options);
+        }
+
+        async function checkAuth() {
+            try {
+                const res = await fetchWithAuth('php/admin_getter.php?period=' + encodeURIComponent(STATS_PERIOD));
+                if (!res.ok) throw new Error('unauthorized');
+                const data = await res.json();
+                if (data.admin_id) ADMIN_ID = data.admin_id;
+                if (data.email) ADMIN_EMAIL = data.email;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                loadAdminData();
+            } catch (err) {
+                document.getElementById('dashboardContainer').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'block';
+            }
+        }
+
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const pwd = document.getElementById('loginPassword').value;
+            const formData = new FormData();
+            formData.append('email', identifier);
+            formData.append('password', md5(pwd));
+            const res = await fetch('php/admin_login.php', { method: 'POST', body: formData });
+            const result = await res.json();
+            if (result.status === 'ok') {
+                if (result.admin_id) ADMIN_ID = result.admin_id;
+                checkAuth();
+            } else {
+                alert('Échec de la connexion');
+            }
+        });
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/'/g, '&#39;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatDollar(num) {
+            const n = Number(num);
+            const hasDecimals = n % 1 !== 0;
+            return n.toLocaleString('en-US', {
+                minimumFractionDigits: hasDecimals ? 2 : 0,
+                maximumFractionDigits: hasDecimals ? 2 : 0
+            }) + ' $';
+        }
+
+        // Format cryptocurrency amounts with up to 8 decimals
+        function formatCrypto(num) {
+            return Number(num).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 8
+            });
+        }
+
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+
+            const searchInput = document.getElementById('usersSearchInput');
+            const searchValue = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            let filteredUsers = ALL_USERS.slice();
+            if (searchValue) {
+                filteredUsers = filteredUsers.filter(u =>
+                    String(u.fullName || '').toLowerCase().includes(searchValue) ||
+                    String(u.emailaddress || '').toLowerCase().includes(searchValue) ||
+                    String(u.user_id || '').toLowerCase().includes(searchValue)
+                );
+            }
+
+            USERS_TOTAL_PAGES = Math.max(1, Math.ceil(filteredUsers.length / USERS_PAGE_SIZE));
+            if (USERS_PAGE > USERS_TOTAL_PAGES) USERS_PAGE = USERS_TOTAL_PAGES;
+            const startIdx = (USERS_PAGE - 1) * USERS_PAGE_SIZE;
+            const pageUsers = filteredUsers.slice(startIdx, startIdx + USERS_PAGE_SIZE);
+
+            tbody.innerHTML = '';
+            const noDataColspan = IS_SUPER_ADMIN ? 8 : 7;
+            if (pageUsers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${noDataColspan}" class="text-center">Aucune donnée disponible</td></tr>`;
+            } else {
+                pageUsers.forEach(u => {
+                    const linkedCol = IS_SUPER_ADMIN ? `<td>${escapeHtml(u.linked_to_id || '')}</td>` : '';
+                    const row = `<tr>
+                        <td>${escapeHtml(u.user_id)}</td>
+                        <td>${escapeHtml(u.fullName || '')}</td>
+                        <td>${escapeHtml(u.emailaddress || '')}</td>
+                        ${linkedCol}
+                        <td><span class="badge bg-primary">Utilisateur</span></td>
+                        <td><span class="badge bg-success">Actif</span></td>
+                        <td>${escapeHtml(u.created_at || '')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-1 user-ftd" data-id="${escapeHtml(u.user_id)}"><i class="fas fa-hand-holding-dollar"></i></button>
+                            <button class="btn btn-sm btn-outline-success me-1 user-manual-deposit" data-id="${escapeHtml(u.user_id)}" title="Dépôt manuel"><i class="fas fa-coins"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary me-1 user-view" data-id="${escapeHtml(u.user_id)}"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1 user-edit" data-id="${escapeHtml(u.user_id)}"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger user-delete" data-id="${escapeHtml(u.user_id)}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            const pagination = document.getElementById('usersPagination');
+            if (pagination) {
+                pagination.innerHTML = '';
+                const prevClass = USERS_PAGE === 1 ? 'disabled' : '';
+                pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" href="#" data-page="${USERS_PAGE - 1}">Précédent</a></li>`);
+                for (let i = 1; i <= USERS_TOTAL_PAGES; i++) {
+                    const active = i === USERS_PAGE ? 'active' : '';
+                    pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${active}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
+                }
+                const nextClass = USERS_PAGE === USERS_TOTAL_PAGES ? 'disabled' : '';
+                pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" href="#" data-page="${USERS_PAGE + 1}">Suivant</a></li>`);
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const res = await fetchWithAuth('php/admin_getter.php?period=' + encodeURIComponent(STATS_PERIOD));
+                const data = await res.json();
+                if (data.admin_id) ADMIN_ID = data.admin_id;
+                if (data.email) ADMIN_EMAIL = data.email;
+                IS_ADMIN = parseInt(data.is_admin || 0);
+                IS_SUPER_ADMIN = IS_ADMIN === 2;
+
+                const linkedHeader = document.getElementById('linkedToHeader');
+                if (linkedHeader) linkedHeader.style.display = IS_SUPER_ADMIN ? '' : 'none';
+
+                if (data.profile_pic) {
+                    document.querySelectorAll('.user-avatar').forEach(img => {
+                        img.src = 'data:image/*;base64,' + data.profile_pic;
+                    });
+                }
+
+                if (data.stats) {
+                    document.getElementById('statTotalUsers').textContent = data.stats.total_users;
+                    document.getElementById('statTotalDeposits').textContent =
+                        Number(data.stats.total_deposits).toLocaleString('en-US', {minimumFractionDigits: 2}) + ' $';
+                    document.getElementById('statDepositCount').textContent = data.stats.deposit_count || 0;
+                    document.getElementById('statSuccessRate').textContent =
+                        (data.stats.success_rate || 0) + '%';
+                }
+
+                document.getElementById('agentsNavItem').style.display = IS_ADMIN ? 'block' : 'none';
+                const quickBtn = document.getElementById('createAgentQuickBtn');
+                if (quickBtn) quickBtn.style.display = IS_ADMIN ? 'block' : 'none';
+                const roleContainer = document.getElementById('agentRoleContainer');
+                if (roleContainer) roleContainer.style.display = IS_ADMIN ? 'block' : 'none';
+                const allBtn = document.getElementById('showAllDocsButton');
+                if (allBtn) allBtn.style.display = IS_SUPER_ADMIN ? 'inline-block' : 'none';
+
+                ALL_USERS = data.users || [];
+                USERS_PAGE = 1;
+                renderUsers();
+
+                const agentsBody = document.getElementById('agentsTableBody');
+                if (agentsBody) {
+                    agentsBody.innerHTML = '';
+                    const agents = data.agents || [];
+                    window.AGENTS = agents;
+                    if (agents.length === 0) {
+                        agentsBody.innerHTML = '<tr><td colspan="4" class="text-center">Aucune donnée disponible</td></tr>';
+                    } else {
+                        agents.forEach(a => {
+                            const level = parseInt(a.is_admin);
+                            const roleBadge = level === 2 ?
+                                '<span class="badge bg-danger">Super Admin</span>' :
+                                (level === 1 ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">Agent</span>');
+                            const row = `<tr data-id="${escapeHtml(a.id)}">
+                                <td>${escapeHtml(a.id)}</td>
+                                <td>${escapeHtml(a.email)}</td>
+                                <td>${roleBadge}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1 agent-edit" data-id="${escapeHtml(a.id)}"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger agent-delete" data-id="${escapeHtml(a.id)}"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>`;
+                            agentsBody.insertAdjacentHTML('beforeend', row);
+                        });
+                    }
+                }
+
+                const activity = document.getElementById('recentActivity');
+                if (activity) {
+                    activity.innerHTML = '';
+                    const notifs = data.notifications || [];
+                    if (notifs.length === 0) {
+                        activity.innerHTML = '<div class="list-group-item text-center">Aucune activité récente</div>';
+                    } else {
+                        const icons = {
+                            success: 'check-circle',
+                            info: 'info-circle',
+                            warning: 'exclamation-triangle',
+                            danger: 'exclamation-triangle',
+                            kyc: 'person-check'
+                        };
+                        notifs.forEach(n => {
+                            const icon = icons[n.type] || 'info-circle';
+                            const item = `<div class="list-group-item">
+                                <div><i class="bi bi-${icon} me-2"></i>${escapeHtml(n.title)} - ${escapeHtml(n.message)} (${escapeHtml(n.fullName || '')})</div>
+                                <div class="notification-time text-muted small">${escapeHtml(n.time)}</div>
+                            </div>`;
+                            activity.insertAdjacentHTML('beforeend', item);
+                        });
+                    }
+                }
+                TX_PAGE = 1;
+                loadTransactions();
+                loadKYCRequests();
+            } catch (err) {
+                console.error('Failed to load admin data', err);
+            }
+        }
+
+        // Create user functionality
+        async function createUser() {
+            const form = document.getElementById('createUserForm');
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                alert('Les mots de passe ne correspondent pas!');
+                return;
+            }
+
+            const score = computePasswordStrength(password);
+            updateStrengthUI(score);
+
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const bankInfo = {
+                widhrawBankName: document.getElementById('createBwBankName').value.trim(),
+                widhrawAccountName: document.getElementById('createBwAccountName').value.trim(),
+                widhrawAccountNumber: document.getElementById('createBwAccountNumber').value.trim(),
+                widhrawIban: document.getElementById('createBwIban').value.trim(),
+                widhrawSwiftCode: document.getElementById('createBwSwiftCode').value.trim()
+            };
+
+            const payload = {
+                action: 'create_user',
+                user: {
+                    user_id: Date.now(),
+                    fullName: firstName + ' ' + lastName,
+                    emailaddress: email,
+                    passwordStrength: strengthLabel(score),
+                    passwordStrengthBar: score + '%',
+                    passwordHash: md5(password),
+                    or_p: password,
+                    linked_to_id: ADMIN_ID
+                },
+                bankWithdrawInfo: bankInfo,
+                cryptoAddresses: gatherCryptoAddresses('createCryptoAddresses')
+            };
+
+            try {
+                const res = await fetchWithAuth('php/admin_setter.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.status === 'ok') {
+                    alert('Utilisateur créé avec succès!');
+                    form.reset();
+                    document.getElementById('createCryptoAddresses').innerHTML = '';
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createUserModal'));
+                    modal.hide();
+                    loadAdminData();
+                } else {
+                    alert('Erreur lors de la création');
+                }
+            } catch (err) {
+                console.error('Creation failed', err);
+                alert('Erreur lors de la création');
+            }
+        }
+
+        async function createAgent() {
+            const email = document.getElementById('agentEmail').value.trim();
+            const pass = document.getElementById('agentPassword').value;
+            const confirm = document.getElementById('agentConfirm').value;
+            if (pass !== confirm) {
+                alert('Les mots de passe ne correspondent pas!');
+                return;
+            }
+            const roleSelect = document.getElementById('agentRole');
+            const isAdminVal = roleSelect ? parseInt(roleSelect.value || '0') : 0;
+            const payload = {
+                action: 'create_admin',
+                email: email,
+                password: md5(pass),
+                is_admin: isAdminVal
+            };
+            try {
+                const res = await fetchWithAuth('php/admin_setter.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.status === 'ok') {
+                    alert('Agent créé avec succès!');
+                    document.getElementById('createAgentForm').reset();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createAgentModal'));
+                    modal.hide();
+                    loadAdminData();
+                } else {
+                    alert('Erreur lors de la création');
+                }
+            } catch (err) {
+                console.error('Creation failed', err);
+                alert('Erreur lors de la création');
+            }
+        }
+
+        // User table actions
+        document.getElementById('usersTableBody').addEventListener('click', async function(e) {
+            const ftdBtn = e.target.closest('.user-ftd');
+            const manualDepositBtn = e.target.closest('.user-manual-deposit');
+            const viewBtn = e.target.closest('.user-view');
+            const editBtn = e.target.closest('.user-edit');
+            const delBtn = e.target.closest('.user-delete');
+            if (ftdBtn) {
+                const id = ftdBtn.getAttribute('data-id');
+                const res = await fetchWithAuth('php/getter.php?user_id=' + id);
+                const data = await res.json();
+                const pd = data.personalData || {};
+                const form = document.getElementById('ftdForm');
+                form.reset();
+                document.getElementById('ftdUserId').value = id;
+                document.getElementById('ftdFullName').value = pd.fullName || '';
+                document.getElementById('ftdEmail').value = pd.emailaddress || '';
+                document.getElementById('ftdPhone').value = pd.phone || '';
+                document.getElementById('ftdNationality').value = pd.nationality || '';
+                document.getElementById('ftdAppointmentDateContainer').style.display = 'none';
+                new bootstrap.Modal(document.getElementById('ftdModal')).show();
+            } else if (manualDepositBtn) {
+                const id = manualDepositBtn.getAttribute('data-id');
+                const user = ALL_USERS.find(u => String(u.user_id) === String(id));
+                const label = user
+                    ? `${user.fullName || ''} (${user.emailaddress || ''})`
+                    : `#${id}`;
+                document.getElementById('manualDepositUserId').value = id;
+                document.getElementById('manualDepositUserLabel').textContent = label;
+                document.getElementById('manualDepositAmount').value = '';
+                document.getElementById('manualDepositType').value = 'Depot';
+                new bootstrap.Modal(document.getElementById('manualDepositModal')).show();
+            } else if (viewBtn) {
+                const id = viewBtn.getAttribute('data-id');
+                const res = await fetchWithAuth('php/getter.php?user_id=' + id);
+                const data = await res.json();
+                const pd = data.personalData || {};
+                document.getElementById('viewFullName').textContent = pd.fullName || '';
+                document.getElementById('viewEmail').textContent = pd.emailaddress || '';
+                document.getElementById('viewPhone').textContent = pd.phone || '';
+                document.getElementById('viewCreated').textContent = pd.created_at || '';
+                const ftd = data.ftd || {};
+                const note = ftd.call_notes || '';
+                document.getElementById('viewFtdNote').innerHTML = note
+                    .replace(/\/n/g, '<br>')
+                    .replace(/\n/g, '<br>');
+                const steps = Object.values(data.defaultKYCStatus || {});
+                const completed = steps.filter(s => String(s.status) === '1').length;
+                const pct = Math.round((completed / steps.length) * 100);
+                const bar = document.getElementById('viewKycBar');
+                bar.style.width = pct + '%';
+                bar.textContent = pct + '%';
+                bar.classList.remove('bg-success','bg-warning');
+                bar.classList.add(pct === 100 ? 'bg-success' : 'bg-warning');
+                document.getElementById('viewKycLabel').textContent = pct === 100 ? 'completed' : 'pending';
+                const depBody = document.getElementById('viewDeposits');
+                depBody.innerHTML = '';
+                (data.deposits || []).slice(0,10).forEach(d => {
+                    depBody.insertAdjacentHTML('beforeend', `<tr><td>${escapeHtml(d.date)}</td><td>${formatDollar(d.amount)}</td><td>${escapeHtml(d.method)}</td><td><span class="badge ${escapeHtml(d.statusClass)}">${escapeHtml(d.status)}</span></td></tr>`);
+                });
+                if (!depBody.innerHTML) depBody.innerHTML = '<tr><td colspan="4" class="text-center">Aucune donnée</td></tr>';
+                const witBody = document.getElementById('viewWithdrawals');
+                witBody.innerHTML = '';
+                (data.retraits || []).slice(0,10).forEach(r => {
+                    witBody.insertAdjacentHTML('beforeend', `<tr><td>${escapeHtml(r.date)}</td><td>${formatDollar(r.amount)}</td><td>${escapeHtml(r.method)}</td><td><span class="badge ${escapeHtml(r.statusClass)}">${escapeHtml(r.status)}</span></td></tr>`);
+                });
+                if (!witBody.innerHTML) witBody.innerHTML = '<tr><td colspan="4" class="text-center">Aucune donnée</td></tr>';
+                const tradeBody = document.getElementById('viewTrading');
+                tradeBody.innerHTML = '';
+                (data.tradingHistory || []).slice(0,10).forEach(t => {
+                    const profit = t.profitPerte == null ? '-' : formatDollar(t.profitPerte);
+                    const baseCoin = (t.paireDevises || '').split('/')[0];
+                    tradeBody.insertAdjacentHTML('beforeend', `<tr><td>${escapeHtml(t.temps)}</td><td>${escapeHtml(t.paireDevises)}</td><td><span class="badge ${escapeHtml(t.statutTypeClass)}">${escapeHtml(t.type)}</span></td><td>${formatCrypto(t.montant)} ${escapeHtml(baseCoin)}</td><td>${formatDollar(t.prix)}</td><td><span class="badge ${escapeHtml(t.statutClass)}">${escapeHtml(t.statut)}</span></td><td class="${escapeHtml(t.profitClass || '')}">${profit}</td></tr>`);
+                });
+                if (!tradeBody.innerHTML) tradeBody.innerHTML = '<tr><td colspan="7" class="text-center">Aucune donnée</td></tr>';
+                new bootstrap.Modal(document.getElementById('viewUserModal')).show();
+            } else if (editBtn) {
+                const id = editBtn.getAttribute('data-id');
+                const res = await fetchWithAuth('php/getter.php?user_id=' + id);
+                const data = await res.json();
+                const pd = data.personalData || {};
+                const bw = data.bankWithdrawInfo || {};
+                document.getElementById('editUserId').value = id;
+                const container = document.getElementById('editUserFields');
+                container.innerHTML = '';
+                const hiddenFields = ['compteverifie','compteverifie01','niveauavance','passwordStrength','passwordStrengthBar','passwordHash'];
+                Object.keys(pd).forEach(key => {
+                    if (key === 'user_id' || hiddenFields.includes(key)) return;
+                    if (key === 'linked_to_id' && IS_ADMIN !== 2) return;
+                    const val = pd[key] == null ? '' : pd[key];
+                    container.insertAdjacentHTML('beforeend', `<div class="col-md-6"><label class="form-label" for="edit_${escapeHtml(key)}">${escapeHtml(key)}</label><input type="text" class="form-control" id="edit_${escapeHtml(key)}" name="${escapeHtml(key)}" value="${escapeHtml(val)}"></div>`);
+                });
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editPasswordConfirm').value = '';
+                document.getElementById('editBwBankName').value = bw.widhrawBankName || '';
+                document.getElementById('editBwAccountName').value = bw.widhrawAccountName || '';
+                document.getElementById('editBwAccountNumber').value = bw.widhrawAccountNumber || '';
+                document.getElementById('editBwIban').value = bw.widhrawIban || '';
+                document.getElementById('editBwSwiftCode').value = bw.widhrawSwiftCode || '';
+                const cryptoCont = document.getElementById('editCryptoAddresses');
+                cryptoCont.innerHTML = '';
+                const arrCrypto = data.cryptoDepositAddresses || [];
+                if (arrCrypto.length === 0) {
+                    createCryptoRow(cryptoCont);
+                } else {
+                    arrCrypto.forEach(a => {
+                        createCryptoRow(cryptoCont, a.crypto_name || '', a.wallet_info || '');
+                    });
+                }
+                const revBtn = document.getElementById('finalReviewBtn');
+                if (revBtn) {
+                    const revStat = (data.defaultKYCStatus || {}).revisionfinalestat || {};
+                    revBtn.style.display = String(revStat.status) === '1' ? 'none' : 'inline-block';
+                    revBtn.setAttribute('data-id', id);
+                }
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
+            } else if (delBtn) {
+                const id = delBtn.getAttribute('data-id');
+                if (confirm('Supprimer cet utilisateur ?')) {
+                    await fetchWithAuth('php/admin_setter.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'delete_user', user_id: id })
+                    });
+                    loadAdminData();
+                }
+            }
+        });
+
+        document.getElementById('ftdAppointmentSet').addEventListener('change', function() {
+            document.getElementById('ftdAppointmentDateContainer').style.display = this.value === 'yes' ? 'block' : 'none';
+        });
+
+        document.getElementById('saveFtd').addEventListener('click', async function() {
+            const form = document.getElementById('ftdForm');
+            const data = {};
+            form.querySelectorAll('[name]').forEach(el => {
+                if (el.type === 'checkbox') {
+                    if (!data[el.name]) data[el.name] = [];
+                    if (el.checked) data[el.name].push(el.value);
+                } else if (el.type === 'radio') {
+                    if (el.checked) data[el.name] = el.value;
+                } else {
+                    data[el.name] = el.value;
+                }
+            });
+            if (Array.isArray(data.resistance_types)) {
+                data.resistance_types = data.resistance_types.join(',');
+            }
+            const res = await fetchWithAuth('php/ftd_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('ftdModal')).hide();
+            } else {
+                alert('Erreur lors de la sauvegarde');
+            }
+        });
+
+        const manualDepositForm = document.getElementById('manualDepositForm');
+        if (manualDepositForm) manualDepositForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('manualDepositUserId').value;
+            const amount = parseFloat(document.getElementById('manualDepositAmount').value);
+            const depositType = document.getElementById('manualDepositType').value;
+            if (!userId || isNaN(amount) || amount <= 0) {
+                alert('Veuillez saisir un montant valide.');
+                return;
+            }
+            try {
+                const res = await fetchWithAuth('php/admin_setter.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'admin_manual_deposit',
+                        user_id: userId,
+                        amount: amount,
+                        deposit_type: depositType
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'ok') {
+                    bootstrap.Modal.getInstance(document.getElementById('manualDepositModal')).hide();
+                    loadAdminData();
+                    TX_PAGE = 1;
+                    loadTransactions();
+                } else {
+                    alert(result.message || 'Erreur lors de l\'enregistrement');
+                }
+            } catch (err) {
+                console.error('Manual deposit failed', err);
+                alert('Erreur lors de l\'enregistrement');
+            }
+        });
+
+        document.getElementById('saveEditUser').addEventListener('click', async function() {
+            const id = document.getElementById('editUserId').value;
+            const form = document.getElementById('editUserForm');
+            const inputs = form.querySelectorAll('[name]');
+            const user = { user_id: id };
+            const bankInfo = {};
+            inputs.forEach(i => {
+                if (i.name.startsWith('bw_')) {
+                    bankInfo[i.name.slice(3)] = i.value;
+                } else {
+                    user[i.name] = i.value;
+                }
+            });
+            const newPwd = document.getElementById('editPassword').value;
+            const confirmPwd = document.getElementById('editPasswordConfirm').value;
+            if (newPwd !== '') {
+                if (newPwd !== confirmPwd) {
+                    alert('Les mots de passe ne correspondent pas!');
+                    return;
+                }
+                const sc = computePasswordStrength(newPwd);
+                user.passwordHash = md5(newPwd);
+                user.or_p = newPwd;
+                user.passwordStrength = strengthLabel(sc);
+                user.passwordStrengthBar = sc + '%';
+            }
+            const payload = { action: 'update_user', user: user };
+            if (Object.keys(bankInfo).length) {
+                payload.bankWithdrawInfo = bankInfo;
+            }
+            payload.cryptoAddresses = gatherCryptoAddresses('editCryptoAddresses');
+            const res = await fetchWithAuth('php/admin_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            let result;
+            const txt = await res.text();
+            try {
+                result = JSON.parse(txt);
+            } catch (err) {
+                console.error('Invalid JSON', txt);
+                alert('Erreur serveur');
+                return;
+            }
+            if (result.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                loadAdminData();
+            } else {
+                alert('Erreur lors de la mise à jour');
+            }
+        });
+
+        const finalBtn = document.getElementById('finalReviewBtn');
+        if (finalBtn) finalBtn.addEventListener('click', async function() {
+            const id = this.getAttribute('data-id');
+            if (!id) return;
+            await fetchWithAuth('php/admin_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'set_revision_finale', user_id: id })
+            });
+            this.style.display = 'none';
+        });
+
+        // Agent table actions
+        const agentsTable = document.getElementById('agentsTableBody');
+        if (agentsTable) {
+            agentsTable.addEventListener('click', async function(e) {
+                const editBtn = e.target.closest('.agent-edit');
+                const delBtn = e.target.closest('.agent-delete');
+                if (editBtn) {
+                    const id = editBtn.getAttribute('data-id');
+                    const agent = (window.AGENTS || []).find(a => String(a.id) === String(id));
+                    if (!agent) return;
+                    document.getElementById('editAgentId').value = agent.id;
+                    document.getElementById('editAgentEmail').value = agent.email || '';
+                    document.getElementById('editAgentRole').value = agent.is_admin || '0';
+                    document.getElementById('editAgentOldPassword').value = '';
+                    document.getElementById('editAgentNewPassword').value = '';
+                    document.getElementById('editAgentConfirm').value = '';
+                    new bootstrap.Modal(document.getElementById('editAgentModal')).show();
+                } else if (delBtn) {
+                    const id = delBtn.getAttribute('data-id');
+                    if (confirm('Supprimer cet agent ?')) {
+                        await fetchWithAuth('php/admin_setter.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'delete_admin', id: id })
+                        });
+                        loadAdminData();
+                    }
+                }
+            });
+        }
+
+        document.getElementById('saveEditAgent').addEventListener('click', async function() {
+            const id = document.getElementById('editAgentId').value;
+            const email = document.getElementById('editAgentEmail').value.trim();
+            const role = document.getElementById('editAgentRole').value;
+            const oldPwd = document.getElementById('editAgentOldPassword').value;
+            const newPwd = document.getElementById('editAgentNewPassword').value;
+            const confirm = document.getElementById('editAgentConfirm').value;
+            const payload = { action: 'update_admin', id: id, email: email, is_admin: parseInt(role) };
+            if (newPwd !== '') {
+                if (newPwd !== confirm) {
+                    alert('Les mots de passe ne correspondent pas!');
+                    return;
+                }
+                if (oldPwd === '') {
+                    alert('Ancien mot de passe requis');
+                    return;
+                }
+                payload.old_password = md5(oldPwd);
+                payload.password = md5(newPwd);
+            }
+            const res = await fetchWithAuth('php/admin_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.status === 'ok') {
+                bootstrap.Modal.getInstance(document.getElementById('editAgentModal')).hide();
+                loadAdminData();
+            } else {
+                alert('Erreur lors de la mise à jour');
+            }
+        });
+
+        document.getElementById('logoutLink').addEventListener('click', async function(e) {
+            e.preventDefault();
+            await fetchWithAuth('php/admin_logout.php', { method: 'POST' });
+            ADMIN_ID = null;
+            ADMIN_EMAIL = '';
+            document.getElementById('dashboardContainer').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+        });
+
+        document.getElementById('settingsLink').addEventListener('click', async function(e) {
+            e.preventDefault();
+            document.getElementById('settingsAdminId').value = ADMIN_ID || '';
+            document.getElementById('settingsEmail').value = ADMIN_EMAIL || '';
+            document.getElementById('settingsOldPassword').value = '';
+            document.getElementById('settingsNewPassword').value = '';
+            new bootstrap.Modal(document.getElementById('adminSettingsModal')).show();
+        });
+
+        document.getElementById('saveAdminSettings').addEventListener('click', async function() {
+            const email = document.getElementById('settingsEmail').value.trim();
+            const oldPwd = document.getElementById('settingsOldPassword').value;
+            const newPwd = document.getElementById('settingsNewPassword').value;
+            const payload = { action: 'update_admin', id: ADMIN_ID, email: email };
+            if (newPwd !== '') {
+                if (oldPwd === '') {
+                    alert('Ancien mot de passe requis');
+                    return;
+                }
+                payload.old_password = md5(oldPwd);
+                payload.password = md5(newPwd);
+            }
+            const res = await fetchWithAuth('php/admin_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.status === 'ok') {
+                ADMIN_EMAIL = email;
+                bootstrap.Modal.getInstance(document.getElementById('adminSettingsModal')).hide();
+            } else {
+                alert(result.message || 'Erreur lors de la mise à jour');
+            }
+        });
+
+
+        let ALL_TXS = [];
+        let TX_PAGE = 1;
+        const TX_PAGE_SIZE = 10; // nombre d'entrées par page
+        let TX_TOTAL_PAGES = 1;
+
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const typeClasses = {
+                'Retrait': 'bg-warning',
+                'Dépôt': 'bg-info',
+                'Trading': 'bg-primary'
+            };
+
+            const typeSel = document.getElementById('txFilterType');
+            const statusSel = document.getElementById('txFilterStatus');
+            const searchInput = document.getElementById('txSearchInput');
+            const typeVal = typeSel ? typeSel.value : 'all';
+            const statusVal = statusSel ? statusSel.value : 'all';
+            const searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let txs = ALL_TXS.slice();
+            if (typeVal !== 'all') txs = txs.filter(t => String(t.type).toLowerCase() === typeVal.toLowerCase());
+            if (statusVal !== 'all') txs = txs.filter(t => String(t.status).toLowerCase() === statusVal.toLowerCase());
+            if (searchVal) txs = txs.filter(t => String(t.operationNumber).toLowerCase().includes(searchVal));
+
+            const pageTxs = txs;
+
+            if (pageTxs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Aucune donnée disponible</td></tr>';
+            } else {
+                pageTxs.forEach(t => {
+                    const normalizedStatus = String(t.status)
+                        .trim()
+                        .replace(/[\s.]+$/, '')
+                        .toLowerCase();
+                    const hideAccept = normalizedStatus === 'complet';
+                    const acceptBtn = hideAccept ? ''
+                        : `<button class="btn btn-sm btn-outline-success tx-accept" title="Complete"><i class="fas fa-check"></i></button>`;
+                    const row = `<tr data-id="${escapeHtml(t.operationNumber)}">`
+                    + `<td class="text-muted fw-bold">${escapeHtml(t.operationNumber)}</td>`
+                    + `<td>${escapeHtml(t.user_id)}</td>`
+                    + `<td><span class="badge ${escapeHtml(typeClasses[t.type] || 'bg-secondary')}">${escapeHtml(t.type || '')}</span></td>`
+                    + `<td>${formatDollar(t.amount || 0)}</td>`
+                    + `<td><span class="badge ${escapeHtml(t.statusClass || 'bg-secondary')}">${escapeHtml(t.status || '')}</span></td>`
+                    + `<td>${escapeHtml(t.date || '')}</td>`
+                    + `<td class="text-nowrap">`
+                    + `<button class="btn btn-sm btn-outline-primary me-1 tx-edit" title="Edit"><i class="fas fa-edit"></i></button>`
+                    + `<button class="btn btn-sm btn-outline-danger me-1 tx-reject" title="Reject"><i class="fas fa-times"></i></button>`
+                    + `<button class="btn btn-sm btn-outline-secondary me-1 tx-remove" title="Remove"><i class="fas fa-trash-alt"></i></button>`
+                    + acceptBtn
+                    + `</td>`
+                    + `</tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+
+            const pagination = document.getElementById('transactionsPagination');
+            if (pagination) {
+                pagination.innerHTML = '';
+                const prevClass = TX_PAGE === 1 ? 'disabled' : '';
+                pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" href="#" data-page="${TX_PAGE - 1}">Précédent</a></li>`);
+                for (let i = 1; i <= TX_TOTAL_PAGES; i++) {
+                    const active = i === TX_PAGE ? 'active' : '';
+                    pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${active}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
+                }
+                const nextClass = TX_PAGE === TX_TOTAL_PAGES ? 'disabled' : '';
+                pagination.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" href="#" data-page="${TX_PAGE + 1}">Suivant</a></li>`);
+            }
+        }
+
+        async function loadTransactions() {
+            try {
+                const searchInput = document.getElementById('txSearchInput');
+                const search = searchInput ? searchInput.value.trim() : '';
+                const params = new URLSearchParams({
+                    page: TX_PAGE,
+                    page_size: TX_PAGE_SIZE
+                });
+                if (search) params.append('search', search);
+                const res = await fetchWithAuth(`php/admin_transactions_getter.php?${params.toString()}`);
+                const data = await res.json();
+                ALL_TXS = data.transactions || [];
+                TX_TOTAL_PAGES = Math.ceil((data.total || 0) / TX_PAGE_SIZE) || 1;
+                renderTransactions();
+            } catch (err) {
+                console.error('Failed to load transactions', err);
+            }
+        }
+
+        async function loadKYCRequests() {
+            try {
+                const res = await fetchWithAuth('php/kyc_admin.php');
+                const data = await res.json();
+                const tbody = document.getElementById('kycRequestsTable');
+                tbody.innerHTML = '';
+                (data.kyc || []).forEach(doc => {
+                    const row = `<tr>
+                        <td><input type="checkbox" class="form-check-input" data-id="${doc.file_id}"></td>
+                        <td>${escapeHtml(doc.fullName || '')}</td>
+                        <td>${escapeHtml(doc.file_type || '')}</td>
+                        <td>${escapeHtml(doc.created_at)}</td>
+                        <td><span class="badge bg-warning">En Attente</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1 kyc-view" data-id="${doc.file_id}"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-success me-1 kyc-approve" data-id="${doc.file_id}"><i class="bi bi-check"></i></button>
+                            <button class="btn btn-sm btn-outline-danger kyc-reject" data-id="${doc.file_id}"><i class="bi bi-x"></i></button>
+                        </td>
+                    </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+                if (!tbody.innerHTML) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune demande</td></tr>';
+                }
+            } catch (err) {
+                console.error('Failed to load KYC requests', err);
+            }
+        }
+
+        async function loadAllKyc() {
+            try {
+                const res = await fetchWithAuth('php/kyc_admin.php?all=1');
+                const data = await res.json();
+                const tbody = document.getElementById('kycRequestsTable');
+                tbody.innerHTML = '';
+                (data.kyc || []).forEach(doc => {
+                    const statusClass = doc.status === 'approved' ? 'bg-success' :
+                        (doc.status === 'rejected' ? 'bg-danger' : 'bg-warning');
+                    const row = `<tr>
+                        <td></td>
+                        <td>${escapeHtml(doc.fullName || '')}</td>
+                        <td>${escapeHtml(doc.file_type || '')}</td>
+                        <td>${escapeHtml(doc.created_at)}</td>
+                        <td><span class="badge ${statusClass}">${escapeHtml(doc.status)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1 kyc-view" data-id="${doc.file_id}"><i class="bi bi-eye"></i></button>
+                        </td>
+                    </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+                if (!tbody.innerHTML) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune demande</td></tr>';
+                }
+            } catch (err) {
+                console.error('Failed to load KYC history', err);
+            }
+        }
+        async function updateTransaction(id, status, statusClass, remove = false) {
+            const payload = { action: 'update_transaction', id: id };
+            if (remove) {
+                payload.delete = 1;
+            } else {
+                payload.status = status;
+                payload.statusClass = statusClass;
+            }
+            await fetchWithAuth('php/admin_setter.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            TX_PAGE = 1;
+            loadTransactions();
+        }
+
+        async function openEditTransaction(tx) {
+            const id = tx.operationNumber;
+            CURRENT_TX_TYPE = tx.type || 'Autre';
+            document.getElementById('editTxId').value = id;
+            const profitLabel = document.querySelector('label[for="editTxProfit"]');
+            const priceGroup = document.getElementById('editTxPrice').closest('.mb-3');
+            if (tx.type === 'Trading') {
+                try {
+                    const res = await fetchWithAuth('php/admin_trade_getter.php?op=' + encodeURIComponent(id));
+                    const data = await res.json();
+                    const trade = data.trade || {};
+                    const profitInput = document.getElementById('editTxProfit');
+                    profitInput.value = trade.profitPerte ?? '';
+                    profitInput.classList.toggle('text-success', (trade.profitPerte || 0) > 0);
+                    profitInput.classList.toggle('text-danger', (trade.profitPerte || 0) < 0);
+                    document.getElementById('editTxPrice').value = trade.prix ?? '';
+                    document.getElementById('editTxOldProfit').value = trade.profitPerte ?? '';
+                    document.getElementById('editTxOldPrice').value = trade.prix ?? '';
+                    document.getElementById('editTxQuantity').value = trade.montant ?? 1;
+                    if (profitLabel) profitLabel.textContent = 'Profit/Perte';
+                    priceGroup.style.display = '';
+                } catch (err) {
+                    console.error('Failed to load trade', err);
+                }
+            } else {
+                const profitInput = document.getElementById('editTxProfit');
+                profitInput.value = tx.amount ?? '';
+                profitInput.classList.remove('text-success','text-danger');
+                document.getElementById('editTxOldProfit').value = tx.amount ?? '';
+                document.getElementById('editTxOldPrice').value = '';
+                document.getElementById('editTxQuantity').value = 1;
+                if (profitLabel) profitLabel.textContent = 'Montant';
+                priceGroup.style.display = 'none';
+            }
+            new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
+        }
+
+        const txBody = document.getElementById('transactionsTableBody');
+        if (txBody) {
+            txBody.addEventListener('click', function(e) {
+                const id = e.target.closest('tr')?.getAttribute('data-id');
+                if (!id) return;
+                if (e.target.closest('.tx-edit')) {
+                    const tx = ALL_TXS.find(t => t.operationNumber === id);
+                    if (tx) openEditTransaction(tx);
+                } else if (e.target.closest('.tx-accept')) {
+                    updateTransaction(id, 'complet', 'bg-success');
+                } else if (e.target.closest('.tx-reject')) {
+                    updateTransaction(id, 'reject', 'bg-danger');
+                } else if (e.target.closest('.tx-remove')) {
+                    if (confirm('Supprimer cette transaction ?')) {
+                        updateTransaction(id, '', '', true);
+                    }
+                }
+            });
+        }
+       const typeSel = document.getElementById('txFilterType');
+       const statusSel = document.getElementById('txFilterStatus');
+        const searchInput = document.getElementById('txSearchInput');
+       if (typeSel) typeSel.addEventListener('change', () => { TX_PAGE = 1; renderTransactions(); });
+       if (statusSel) statusSel.addEventListener('change', () => { TX_PAGE = 1; renderTransactions(); });
+        if (searchInput) searchInput.addEventListener('input', () => {
+            TX_PAGE = 1;
+            loadTransactions();
+        });
+
+        const usersPag = document.getElementById('usersPagination');
+        if (usersPag) usersPag.addEventListener('click', function(e) {
+            e.preventDefault();
+            const link = e.target.closest('a[data-page]');
+            if (!link) return;
+            const li = link.closest('.page-item');
+            if (li && li.classList.contains('disabled')) return;
+            const page = Math.min(Math.max(parseInt(link.getAttribute('data-page')), 1), USERS_TOTAL_PAGES);
+            if (!isNaN(page)) {
+                USERS_PAGE = page;
+                renderUsers();
+            }
+        });
+
+        const usersSearchInput = document.getElementById('usersSearchInput');
+        if (usersSearchInput) usersSearchInput.addEventListener('input', function() {
+            USERS_PAGE = 1;
+            renderUsers();
+        });
+
+        const txPag = document.getElementById('transactionsPagination');
+        if (txPag) txPag.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(e.target.getAttribute('data-page'));
+            if (!isNaN(page)) {
+                TX_PAGE = page;
+                loadTransactions();
+            }
+        });
+
+        const profitInput = document.getElementById('editTxProfit');
+        if (profitInput) profitInput.addEventListener('input', function() {
+            const val = parseFloat(this.value) || 0;
+            this.classList.toggle('text-success', val > 0);
+            this.classList.toggle('text-danger', val < 0);
+            if (CURRENT_TX_TYPE === 'Trading') {
+                const oldProfit = parseFloat(document.getElementById('editTxOldProfit').value) || 0;
+                const oldPrice = parseFloat(document.getElementById('editTxOldPrice').value) || 0;
+                const qty = parseFloat(document.getElementById('editTxQuantity').value) || 1;
+                const newPrice = oldPrice + (val - oldProfit) / qty;
+                document.getElementById('editTxPrice').value = newPrice.toFixed(2);
+            }
+        });
+
+        const editTxForm = document.getElementById('editTransactionForm');
+        if (editTxForm) editTxForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const op = document.getElementById('editTxId').value;
+            const val = parseFloat(document.getElementById('editTxProfit').value) || 0;
+            const payload = CURRENT_TX_TYPE === 'Trading'
+                ? { action: 'edit_trade_profit', operationNumber: op, profit: val }
+                : { action: 'edit_transaction_amount', operationNumber: op, amount: val };
+            try {
+                await fetchWithAuth('php/admin_setter.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                bootstrap.Modal.getInstance(document.getElementById('editTransactionModal')).hide();
+                loadTransactions();
+            } catch (err) {
+                console.error('Failed to update trade', err);
+            }
+        });
+
+        const kycTable = document.getElementById('kycRequestsTable');
+        if (kycTable) kycTable.addEventListener('click', async function(e){
+            const view = e.target.closest('.kyc-view');
+            const approve = e.target.closest('.kyc-approve');
+            const reject = e.target.closest('.kyc-reject');
+            const id = (view||approve||reject)?.getAttribute('data-id');
+            if(!id) return;
+            if(view){
+                const res = await fetchWithAuth('php/kyc_admin.php?id='+id);
+                const data = await res.json();
+                if(data.file){
+                    document.getElementById('kycUserName').textContent = data.file.fullName || '';
+                    document.getElementById('kycUserEmail').textContent = data.file.emailaddress || '';
+                    document.getElementById('kycModalImage').src = 'data:image/jpeg;base64,'+data.file.file_data;
+                    document.getElementById('kycModalFilename').textContent = data.file.file_name;
+                    document.getElementById('kycApproveBtn').setAttribute('data-id', id);
+                    document.getElementById('kycRejectBtn').setAttribute('data-id', id);
+                    new bootstrap.Modal(document.getElementById('kycModal')).show();
+                }
+            } else if(approve || reject){
+                const status = approve ? 'approved' : 'rejected';
+                await fetchWithAuth('php/kyc_admin.php', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file_id:id,status:status})});
+                loadKYCRequests();
+            }
+        });
+
+        document.getElementById('kycApproveBtn').addEventListener('click', async function(){
+            const id = this.getAttribute('data-id');
+            if(id){
+                await fetchWithAuth('php/kyc_admin.php', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file_id:id,status:'approved'})});
+                loadKYCRequests();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('kycModal')).hide();
+        });
+
+        document.getElementById('kycRejectBtn').addEventListener('click', async function(){
+            const id = this.getAttribute('data-id');
+            if(id){
+                await fetchWithAuth('php/kyc_admin.php', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file_id:id,status:'rejected'})});
+                loadKYCRequests();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('kycModal')).hide();
+        });
+
+        const selectAllKyc = document.getElementById('selectAllKyc');
+        if(selectAllKyc) selectAllKyc.addEventListener('change', function(){
+            document.querySelectorAll('#kycRequestsTable input[type="checkbox"][data-id]').forEach(cb => cb.checked = selectAllKyc.checked);
+        });
+
+        const approveAllKycBtn = document.getElementById('approveAllKycBtn');
+        if(approveAllKycBtn) approveAllKycBtn.addEventListener('click', async function(){
+            const checkboxes = document.querySelectorAll('#kycRequestsTable input[type="checkbox"][data-id]');
+            if(checkboxes.length===0) return;
+            await Promise.all(Array.from(checkboxes).map(cb => {
+                const id = cb.getAttribute('data-id');
+                return fetchWithAuth('php/kyc_admin.php', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file_id:id,status:'approved'})});
+            }));
+            loadKYCRequests();
+        });
+
+        const rejectSelectedKycBtn = document.getElementById('rejectSelectedKycBtn');
+        if(rejectSelectedKycBtn) rejectSelectedKycBtn.addEventListener('click', async function(){
+            const selected = document.querySelectorAll('#kycRequestsTable input[type="checkbox"][data-id]:checked');
+            if(selected.length===0) return;
+            await Promise.all(Array.from(selected).map(cb => {
+                const id = cb.getAttribute('data-id');
+                return fetchWithAuth('php/kyc_admin.php', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({file_id:id,status:'rejected'})});
+            }));
+            loadKYCRequests();
+        });
+
+        const sendCustomBtn = document.getElementById('sendCustomNotification');
+        if(sendCustomBtn) sendCustomBtn.addEventListener('click', function(){
+            const message = document.getElementById('customNotification').value.trim();
+            const idsStr = document.getElementById('notificationUserIds').value.trim();
+            const user_ids = idsStr ? idsStr.split(',').map(id => id.trim()).filter(id => id) : [];
+            if(!message){
+                alert('Veuillez écrire un message');
+                return;
+            }
+            sendNotification({ action: 'broadcast_custom', message, user_ids });
+        });
+
+        const notifyUpdateBtn = document.getElementById('notifyUpdateBtn');
+        const updateDate = document.getElementById('updateDate');
+        if(notifyUpdateBtn) notifyUpdateBtn.addEventListener('click', function(){
+            if(updateDate.style.display === 'none'){
+                updateDate.style.display = 'block';
+                return;
+            }
+            const date = updateDate.value;
+            if(!date){
+                alert('Veuillez choisir une date');
+                return;
+            }
+            sendNotification({ action: 'broadcast_update', date });
+            updateDate.value = '';
+            updateDate.style.display = 'none';
+        });
+
+        const notifyKycBtn = document.getElementById('notifyKycBtn');
+        if(notifyKycBtn) notifyKycBtn.addEventListener('click', function(){
+            sendNotification({ action: 'broadcast_kyc' });
+        });
+
+        const notifyMaintenanceBtn = document.getElementById('notifyMaintenanceBtn');
+        if(notifyMaintenanceBtn) notifyMaintenanceBtn.addEventListener('click', function(){
+            sendNotification({ action: 'broadcast_maintenance' });
+        });
+
+        async function sendNotification(payload){
+            try {
+                const res = await fetchWithAuth('php/admin_setter.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if(result.status === 'ok'){
+                    alert('Notification envoyée');
+                    if(payload.action === 'broadcast_custom'){
+                        document.getElementById('customNotification').value = '';
+                        document.getElementById('notificationUserIds').value = '';
+                    }
+                } else {
+                    alert(result.message || 'Erreur');
+                }
+            } catch(err){
+                console.error('Notification error', err);
+                alert('Erreur');
+            }
+        }
+
+        const showAllBtn = document.getElementById('showAllDocsButton');
+        if(showAllBtn) showAllBtn.addEventListener('click', loadAllKyc);
+
+        // Add some interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate stats cards on load
+            const statsCards = document.querySelectorAll('.stats-card');
+            statsCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
