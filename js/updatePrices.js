@@ -26,6 +26,7 @@ var currentPrice = 0;
 // Track the currently selected trading pair
 let selectedPairVal = $('#currencyPair').val();
 let selectedPairText = $('#currencyPair option:selected').text();
+let selectedChartTheme = $('#chartTheme').val() || 'light';
 let priceInterval = null;
 let priceFetchController = null;
 
@@ -73,6 +74,38 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/'/g, '&#39;')
         .replace(/"/g, '&quot;');
+}
+
+function renderTradingViewWidget(theme) {
+    const chart = document.getElementById('tradingview_chart');
+    if (!chart) return;
+    chart.innerHTML = `
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+            <div class="tradingview-widget-copyright">
+                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                    <span class="blue-text">Track all markets on TradingView</span>
+                </a>
+            </div>
+        </div>`;
+    const widgetConfig = {
+        autosize: true,
+        symbol: 'BINANCE:BTCUSDT',
+        interval: 'D',
+        timezone: 'Etc/UTC',
+        theme: theme,
+        style: '1',
+        locale: 'en',
+        allow_symbol_change: true,
+        calendar: false,
+        support_host: 'https://www.tradingview.com'
+    };
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.async = true;
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.text = JSON.stringify(widgetConfig);
+    chart.querySelector('.tradingview-widget-container').appendChild(script);
 }
 
 function showBootstrapAlert(containerId, message, type = 'success') {
@@ -1711,6 +1744,11 @@ function initializeUI() {
         selectedPairVal = $(this).val();
         selectedPairText = $('#currencyPair option:selected').text();
         fetchPrice(selectedPairVal);
+    });
+
+    $('#chartTheme').on('change', function () {
+        selectedChartTheme = $(this).val();
+        renderTradingViewWidget(selectedChartTheme);
     });
 
     $('#orderType').on('change', function () {
