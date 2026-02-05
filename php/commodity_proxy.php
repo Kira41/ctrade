@@ -127,33 +127,58 @@ function toTradingViewSymbolsFromPair(string $pair): array {
     }
 
     $directMap = [
-        // Extracted from TradingView widget presets used in the provided code.
-        'EURUSD' => ['FX_IDC:EURUSD'],
-        'USDJPY' => ['FX_IDC:USDJPY'],
-        'GBPUSD' => ['FX_IDC:GBPUSD'],
-        'AUDUSD' => ['FX_IDC:AUDUSD'],
-        'USDCAD' => ['FX_IDC:USDCAD'],
-        'USDCHF' => ['FX_IDC:USDCHF'],
-        'EURGBP' => ['FX_IDC:EURGBP'],
-        'EURJPY' => ['FX_IDC:EURJPY'],
+        // TradingView symbols adapted from the provided widget mapping.
+        // Commodities
+        'GOLDUSD' => ['CMCMARKETS:GOLD'],
+        'SILVERUSD' => ['CMCMARKETS:SILVER'],
+        'PLATINUMUSD' => ['CMCMARKETS:PLATINUM'],
+        'COPPERUSD' => ['CMCMARKETS:COPPER'],
+        'WTIUSD' => ['TVC:USOIL'],
+        'BRENTUSD' => ['TVC:UKOIL'],
+        'NATGASUSD' => ['SKILLING:NATGAS'],
+        'COALUSD' => ['ICEEUR:NCF1!'],
+        'ALUMINUMUSD' => ['FUSIONMARKETS:XALUSD'],
+        'NICKELUSD' => ['EIGHTCAP:XNIUSD'],
+        'ZINCUSD' => ['FUSIONMARKETS:XZNUSD'],
+        'LEADUSD' => ['FUSIONMARKETS:XPBUSD'],
+        'IRONOREUSD' => ['COMEX:TIO1!'],
+        'WHEATUSD' => ['SKILLING:WHEAT'],
+        'CORNUSD' => ['SKILLING:CORN'],
+        'SOYBEANUSD' => ['SKILLING:SOYBEAN'],
+        'COFFEEUSD' => ['SKILLING:COFFEE'],
+        'COCOAUSD' => ['SKILLING:COCOA'],
+        'SUGARUSD' => ['SKILLING:SUGAR'],
+        'COTTONUSD' => ['SKILLING:COTTON'],
+
+        // Indices
         'SP500USD' => ['FOREXCOM:SPXUSD'],
         'NASDAQ100USD' => ['FOREXCOM:NSXUSD'],
         'DJIAUSD' => ['FOREXCOM:DJI'],
-        'DXYUSD' => ['INDEX:DXY'],
         'FTSE100USD' => ['FOREXCOM:UKXGBP'],
         'DAX30USD' => ['INDEX:DEU40'],
         'CAC40USD' => ['INDEX:CAC40'],
         'NIKKEI225USD' => ['INDEX:NKY'],
         'HANGSENGUSD' => ['INDEX:HSI'],
-        'WTIUSD' => ['PYTH:WTI3!'],
-        'GOLDUSD' => ['CMCMARKETS:GOLD'],
-        'SILVERUSD' => ['CMCMARKETS:SILVER'],
-        'PLATINUMUSD' => ['CMCMARKETS:PLATINUM'],
-        'COPPERUSD' => ['CMCMARKETS:COPPER'],
-        'COFFEEUSD' => ['BMFBOVESPA:ICF1!'],
-        'COTTONUSD' => ['CMCMARKETS:COTTON'],
-        'SOYBEANUSD' => ['BMFBOVESPA:SJC1!'],
-        'CORNUSD' => ['BMFBOVESPA:CCM1!'],
+        'SHCOMPUSD' => ['SSE:000001'],
+        'RUSSELL2000USD' => ['FOREXCOM:US2000'],
+
+        // Forex
+        'USDJPY' => ['FX_IDC:USDJPY'],
+        'USDGBP' => ['FX_IDC:GBPUSD'],
+        'USDEUR' => ['FX_IDC:EURUSD'],
+        'USDCHF' => ['FX_IDC:USDCHF'],
+        'USDCAD' => ['FX_IDC:USDCAD'],
+        'AUDUSD' => ['FX_IDC:AUDUSD'],
+        'NZDUSD' => ['FX_IDC:NZDUSD'],
+        'EURGBP' => ['FX_IDC:EURGBP'],
+        'EURJPY' => ['FX_IDC:EURJPY'],
+        'GBPJPY' => ['FX_IDC:GBPJPY'],
+
+        // Major crypto
+        'BTCUSD' => ['COINBASE:BTCUSD'],
+        'ETHUSD' => ['COINBASE:ETHUSD'],
+        'USDTUSD' => ['COINBASE:USDTUSD'],
+        'USDCUSD' => ['COINBASE:USDCUSD'],
     ];
 
     if (isset($directMap[$pair])) {

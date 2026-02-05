@@ -1445,72 +1445,6 @@ function initializeUI() {
     renderWithdrawHistory();
     loadTransactions();
 
-    const commoditySymbolMap = {
-        GOLDUSD: 'GC=F',
-        SILVERUSD: 'SI=F',
-        PLATINUMUSD: 'PL=F',
-        COPPERUSD: 'HG=F',
-        WTIUSD: 'CL=F',
-        BRENTUSD: 'BZ=F',
-        NATGASUSD: 'NG=F',
-        COALUSD: 'MTF=F',
-        ALUMINUMUSD: 'ALI=F',
-        NICKELUSD: 'NICKEL=F',
-        ZINCUSD: 'ZNC=F',
-        LEADUSD: 'PBL=F',
-        IRONOREUSD: 'TIO=F',
-        WHEATUSD: 'ZW=F',
-        CORNUSD: 'ZC=F',
-        SOYBEANUSD: 'ZS=F',
-        COFFEEUSD: 'KC=F',
-        COCOAUSD: 'CC=F',
-        SUGARUSD: 'SB=F',
-        COTTONUSD: 'CT=F'
-    };
-
-    const commodityLabelMap = {
-        'GOLD/USD': 'GC=F',
-        'SILVER/USD': 'SI=F',
-        'PLATINUM/USD': 'PL=F',
-        'COPPER/USD': 'HG=F',
-        'CRUDE OIL – WTI/USD': 'CL=F',
-        'CRUDE OIL – BRENT/USD': 'BZ=F',
-        'NATURAL GAS/USD': 'NG=F',
-        'COAL/USD': 'MTF=F',
-        'ALUMINUM/USD': 'ALI=F',
-        'NICKEL/USD': 'NICKEL=F',
-        'ZINC/USD': 'ZNC=F',
-        'LEAD/USD': 'PBL=F',
-        'IRON ORE/USD': 'TIO=F',
-        'WHEAT/USD': 'ZW=F',
-        'CORN/USD': 'ZC=F',
-        'SOYBEANS/USD': 'ZS=F',
-        'COFFEE/USD': 'KC=F',
-        'COCOA/USD': 'CC=F',
-        'SUGAR/USD': 'SB=F',
-        'COTTON/USD': 'CT=F'
-    };
-
-    function normalizePairKey(pair) {
-        return String(pair).toUpperCase().replace('/', '');
-    }
-
-    function getCommoditySymbol(pair) {
-        const pairText = String(pair).toUpperCase().trim();
-        return commoditySymbolMap[normalizePairKey(pair)] || commodityLabelMap[pairText] || null;
-    }
-
-    // Map a currency pair like "BTC/USD" or "BTCUSD" to the Binance symbol
-    // format used by the API. Pairs quoted in USD are converted to USDT so
-    // "LTC/USD" becomes "LTCUSDT".
-    function getBinanceSymbol(pair) {
-        let symbol = String(pair).toUpperCase().replace('/', '');
-        if (!symbol.endsWith('USDT') && symbol.endsWith('USD')) {
-            symbol = symbol.slice(0, -3) + 'USDT';
-        }
-        return symbol;
-    }
-
     currentPrice = 0;
     let currentPricePair = '';
     let priceChange = 0;
@@ -1561,12 +1495,7 @@ function initializeUI() {
         priceFetchController = new AbortController();
         const fetchFor = pair;
         currentPricePair = pair;
-        const commoditySymbol = getCommoditySymbol(pair);
-        const query = commoditySymbol
-            ? `symbol=${encodeURIComponent(commoditySymbol)}`
-            : `pair=${encodeURIComponent(pair)}`;
-
-        fetch(`php/commodity_proxy.php?${query}`, { signal: priceFetchController.signal })
+        fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`, { signal: priceFetchController.signal })
             .then(r => r.json())
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
@@ -1583,13 +1512,8 @@ function initializeUI() {
     }
 
     async function fetchCurrentPrice(pair) {
-        const commoditySymbol = getCommoditySymbol(pair);
-        const query = commoditySymbol
-            ? `symbol=${encodeURIComponent(commoditySymbol)}`
-            : `pair=${encodeURIComponent(pair)}`;
-
         try {
-            const resp = await fetch(`php/commodity_proxy.php?${query}`);
+            const resp = await fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`);
             const info = await resp.json();
             return parseFloat(info.price);
         } catch (e) {
