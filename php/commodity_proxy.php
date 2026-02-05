@@ -93,6 +93,29 @@ function fetchBinanceQuote(string $symbol): ?array {
     ];
 }
 
+function fetchYahooQuote(string $symbol): ?array {
+    $url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' . urlencode($symbol);
+    $result = requestJson($url);
+    if (!$result['ok']) {
+        return null;
+    }
+
+    $row = $result['data']['quoteResponse']['result'][0] ?? null;
+    if (!is_array($row)) {
+        return null;
+    }
+
+    $price = $row['regularMarketPrice'] ?? null;
+    if (!is_numeric($price)) {
+        return null;
+    }
+
+    return [
+        'price' => (float) $price,
+        'changePercent' => isset($row['regularMarketChangePercent']) ? (float) $row['regularMarketChangePercent'] : 0.0,
+    ];
+}
+
 function normalizePair(string $input): string {
     return strtoupper(preg_replace('/[^A-Z0-9=\.\/:-]/', '', $input));
 }
@@ -167,8 +190,70 @@ function toTradingViewSymbolsFromPair(string $pair): array {
     return [];
 }
 
+function toYahooSymbolFromPair(string $pair): ?string {
+    $pair = normalizePair($pair);
+    if ($pair === '') {
+        return null;
+    }
+
+    $map = [
+        // Crypto exceptions and unsupported Binance pairs
+        'OKBUSD' => 'OKB-USD',
+
+        // Stocks
+        'AAPLUSD' => 'AAPL', 'MSFTUSD' => 'MSFT', 'AMZNUSD' => 'AMZN', 'TSLAUSD' => 'TSLA',
+        'GOOGLUSD' => 'GOOGL', 'METAUSD' => 'META', 'NVDAUSD' => 'NVDA', 'BRK.BUSD' => 'BRK-B',
+        'JPMUSD' => 'JPM', 'JNJUSD' => 'JNJ', 'VUSD' => 'V', 'MAUSD' => 'MA', 'PGUSD' => 'PG',
+        'KOUSD' => 'KO', 'PEPUSD' => 'PEP', 'INTCUSD' => 'INTC', 'CSCOUSD' => 'CSCO', 'WMTUSD' => 'WMT',
+        'XOMUSD' => 'XOM', 'CVXUSD' => 'CVX', 'DISUSD' => 'DIS', 'NKEUSD' => 'NKE', 'MCDUSD' => 'MCD',
+        'PFEUSD' => 'PFE', 'MRNAUSD' => 'MRNA', 'ABBVUSD' => 'ABBV', 'CRMUSD' => 'CRM', 'ADBEUSD' => 'ADBE',
+        'ORCLUSD' => 'ORCL', 'TUSD' => 'T', 'VZUSD' => 'VZ', 'BAUSD' => 'BA', 'CATUSD' => 'CAT',
+        'HONUSD' => 'HON', 'LMTUSD' => 'LMT', 'SBUXUSD' => 'SBUX', 'GEUSD' => 'GE', 'IBMUSD' => 'IBM',
+        'SHELUSD' => 'SHEL', 'BPUSD' => 'BP', 'TTEUSD' => 'TTE', 'SIEGYUSD' => 'SIEGY', 'SAPUSD' => 'SAP',
+        'VWAGYUSD' => 'VWAGY', 'BMWYYUSD' => 'BMWYY', 'TMUSD' => 'TM', 'SONYUSD' => 'SONY',
+        'SSNLFUSD' => 'SSNLF', 'BABAUSD' => 'BABA', 'TCEHYUSD' => 'TCEHY', 'PYPLUSD' => 'PYPL',
+
+        // Indices
+        'SP500USD' => '^GSPC', 'DJIAUSD' => '^DJI', 'NASDAQ100USD' => '^NDX', 'FTSE100USD' => '^FTSE',
+        'DAX30USD' => '^GDAXI', 'CAC40USD' => '^FCHI', 'NIKKEI225USD' => '^N225', 'HANGSENGUSD' => '^HSI',
+        'SHCOMPUSD' => '000001.SS', 'RUSSELL2000USD' => '^RUT',
+
+        // Commodities
+        'GOLDUSD' => 'GC=F', 'SILVERUSD' => 'SI=F', 'PLATINUMUSD' => 'PL=F', 'COPPERUSD' => 'HG=F',
+        'WTIUSD' => 'CL=F', 'BRENTUSD' => 'BZ=F', 'NATGASUSD' => 'NG=F', 'COALUSD' => 'MTF=F',
+        'ALUMINUMUSD' => 'ALI=F', 'NICKELUSD' => 'NICKEL=F', 'ZINCUSD' => 'ZNC=F', 'LEADUSD' => 'PBL=F',
+        'IRONOREUSD' => 'TIO=F', 'WHEATUSD' => 'ZW=F', 'CORNUSD' => 'ZC=F', 'SOYBEANUSD' => 'ZS=F',
+        'COFFEEUSD' => 'KC=F', 'COCOAUSD' => 'CC=F', 'SUGARUSD' => 'SB=F', 'COTTONUSD' => 'CT=F',
+    ];
+
+    if (isset($map[$pair])) {
+        return $map[$pair];
+    }
+
+    if (preg_match('/^[A-Z0-9]{2,10}USD$/', $pair)) {
+        return substr($pair, 0, -3) . '-USD';
+    }
+
+    return null;
+}
+
 $pair = isset($_GET['pair']) ? (string) $_GET['pair'] : '';
 $explicitSymbol = isset($_GET['symbol']) ? normalizePair((string) $_GET['symbol']) : '';
+
+$yahooSymbol = null;
+if ($explicitSymbol !== '' && preg_match('/[=\^]|\./', $explicitSymbol)) {
+    $yahooSymbol = $explicitSymbol;
+} elseif ($pair !== '') {
+    $yahooSymbol = toYahooSymbolFromPair($pair);
+}
+
+if ($yahooSymbol !== null) {
+    $yahoo = fetchYahooQuote($yahooSymbol);
+    if ($yahoo !== null) {
+        echo json_encode($yahoo);
+        exit;
+    }
+}
 
 $binanceSymbol = '';
 if ($pair !== '') {
