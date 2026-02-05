@@ -29,6 +29,7 @@ let selectedPairText = $('#currencyPair option:selected').text();
 let selectedChartTheme = $('#chartTheme').val() || 'light';
 let priceInterval = null;
 let priceFetchController = null;
+const LOCALE = 'ar';
 
 // TradingView symbol mapping aligned with the currencyPair options.
 const TV_SYMBOL_MAP = {
@@ -90,7 +91,14 @@ function guessCryptoSymbol(value) {
 
 function getSelectedTVSymbol(pair = selectedPairVal) {
     const key = String(pair || '').replace('/', '').toUpperCase();
-    return TV_SYMBOL_MAP[key] || guessCryptoSymbol(key) || null;
+    if (TV_SYMBOL_MAP[key]) return TV_SYMBOL_MAP[key];
+    if (/^[A-Z.]+USD$/.test(key)) {
+        const base = key.slice(0, -3);
+        if (base && base !== 'USD') {
+            return `NASDAQ:${base}`;
+        }
+    }
+    return guessCryptoSymbol(key) || null;
 }
 
 // Trigger immediate refresh on user interactions
@@ -142,33 +150,34 @@ function escapeHtml(str) {
 function renderTradingViewWidget(theme) {
     const chart = document.getElementById('tradingview_chart');
     if (!chart) return;
-    chart.innerHTML = `
-        <div class="tradingview-widget-container" style="height:100%;width:100%">
-            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-            <div class="tradingview-widget-copyright">
-                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                    <span class="blue-text">Track all markets on TradingView</span>
-                </a>
-            </div>
-        </div>`;
+    chart.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+    const tvSymbol = getSelectedTVSymbol();
+    if (!tvSymbol) {
+        chart.innerHTML = `
+            <div style="padding:20px; color:#94a3b8; font-family:system-ui;">
+                <div style="font-weight:700; color:#e5e7eb; margin-bottom:8px;">${escapeHtml(selectedPairText)}</div>
+                <div>TradingView symbol mapping not found for this asset.</div>
+            </div>`;
+        return;
+    }
     const widgetConfig = {
-        autosize: true,
-        symbol: getSelectedTVSymbol(),
-        interval: 'D',
-        timezone: 'Etc/UTC',
-        theme: theme,
-        style: '1',
-        locale: 'en',
-        allow_symbol_change: true,
-        calendar: false,
-        support_host: 'https://www.tradingview.com'
+        title: 'Selected asset',
+        width: '100%',
+        height: '100%',
+        locale: LOCALE,
+        showSymbolLogo: true,
+        symbolsGroups: [{
+            name: 'Selected',
+            symbols: [{ name: tvSymbol, displayName: selectedPairText }]
+        }],
+        colorTheme: theme === 'dark' ? 'dark' : 'light'
     };
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.async = true;
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
     script.text = JSON.stringify(widgetConfig);
-    chart.querySelector('.tradingview-widget-container').appendChild(script);
+    chart.appendChild(script);
 }
 
 function showBootstrapAlert(containerId, message, type = 'success') {
@@ -1564,6 +1573,10 @@ function initializeUI() {
                 if (currentPricePair !== fetchFor) return;
                 currentPrice = parseFloat(info.price);
                 priceChange = parseFloat(info.changePercent);
+                if (info.tvSymbol) {
+                    TV_SYMBOL_MAP[String(fetchFor).replace('/', '').toUpperCase()] = info.tvSymbol;
+                    renderTradingViewWidget(selectedChartTheme);
+                }
                 updatePriceUI();
             })
             .catch(err => {

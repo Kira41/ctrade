@@ -157,6 +157,13 @@ function toTradingViewSymbolFromPair(string $pair): ?string {
         return $directMap[$pair];
     }
 
+    if (preg_match('/^[A-Z\.]+USD$/', $pair) === 1) {
+        $base = substr($pair, 0, -3);
+        if ($base !== '' && $base !== 'USD') {
+            return 'NASDAQ:' . $base;
+        }
+    }
+
     return guessCryptoTradingViewSymbol($pair);
 }
 
@@ -173,6 +180,7 @@ if ($tvSymbol === null) {
 
 $tvQuote = fetchTradingViewQuote($tvSymbol);
 if ($tvQuote !== null) {
+    $tvQuote['tvSymbol'] = $tvSymbol;
     echo json_encode($tvQuote);
     exit;
 }
