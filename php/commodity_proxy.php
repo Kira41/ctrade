@@ -10,15 +10,23 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_PROXY, '');
+curl_setopt($ch, CURLOPT_NOPROXY, '*');
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Accept: application/json',
     'User-Agent: Mozilla/5.0 (compatible; CoinDashboard/1.0)'
 ]);
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_error($ch);
 if ($response === false || $httpCode !== 200) {
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Unable to fetch price from Yahoo Finance']);
+    $message = 'Unable to fetch price from Yahoo Finance';
+    if ($curlError !== '') {
+        $message .= ': ' . $curlError;
+    }
+    echo json_encode(['status' => 'error', 'message' => $message]);
     curl_close($ch);
     exit;
 }
