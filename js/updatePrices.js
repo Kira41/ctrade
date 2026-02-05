@@ -30,6 +30,69 @@ let selectedChartTheme = $('#chartTheme').val() || 'light';
 let priceInterval = null;
 let priceFetchController = null;
 
+// TradingView symbol mapping aligned with the currencyPair options.
+const TV_SYMBOL_MAP = {
+    GOLDUSD: 'CMCMARKETS:GOLD',
+    SILVERUSD: 'CMCMARKETS:SILVER',
+    PLATINUMUSD: 'CMCMARKETS:PLATINUM',
+    COPPERUSD: 'CMCMARKETS:COPPER',
+    WTIUSD: 'TVC:USOIL',
+    BRENTUSD: 'TVC:UKOIL',
+    NATGASUSD: 'SKILLING:NATGAS',
+    COALUSD: 'ICEEUR:NCF1!',
+    ALUMINUMUSD: 'FUSIONMARKETS:XALUSD',
+    NICKELUSD: 'EIGHTCAP:XNIUSD',
+    ZINCUSD: 'FUSIONMARKETS:XZNUSD',
+    LEADUSD: 'FUSIONMARKETS:XPBUSD',
+    IRONOREUSD: 'COMEX:TIO1!',
+    WHEATUSD: 'SKILLING:WHEAT',
+    CORNUSD: 'SKILLING:CORN',
+    SOYBEANUSD: 'SKILLING:SOYBEAN',
+    COFFEEUSD: 'SKILLING:COFFEE',
+    COCOAUSD: 'SKILLING:COCOA',
+    SUGARUSD: 'SKILLING:SUGAR',
+    COTTONUSD: 'SKILLING:COTTON',
+    SP500USD: 'FOREXCOM:SPXUSD',
+    NASDAQ100USD: 'FOREXCOM:NSXUSD',
+    DJIAUSD: 'FOREXCOM:DJI',
+    FTSE100USD: 'FOREXCOM:UKXGBP',
+    DAX30USD: 'INDEX:DEU40',
+    CAC40USD: 'INDEX:CAC40',
+    NIKKEI225USD: 'INDEX:NKY',
+    HANGSENGUSD: 'INDEX:HSI',
+    SHCOMPUSD: 'SSE:000001',
+    RUSSELL2000USD: 'FOREXCOM:US2000',
+    USDJPY: 'FX_IDC:USDJPY',
+    USDGBP: 'FX_IDC:GBPUSD',
+    USDEUR: 'FX_IDC:EURUSD',
+    USDCHF: 'FX_IDC:USDCHF',
+    USDCAD: 'FX_IDC:USDCAD',
+    AUDUSD: 'FX_IDC:AUDUSD',
+    NZDUSD: 'FX_IDC:NZDUSD',
+    EURGBP: 'FX_IDC:EURGBP',
+    EURJPY: 'FX_IDC:EURJPY',
+    GBPJPY: 'FX_IDC:GBPJPY',
+    BTCUSD: 'COINBASE:BTCUSD',
+    ETHUSD: 'COINBASE:ETHUSD',
+    USDTUSD: 'COINBASE:USDTUSD',
+    USDCUSD: 'COINBASE:USDCUSD'
+};
+
+function guessCryptoSymbol(value) {
+    const pair = String(value || '').toUpperCase();
+    if (!pair.endsWith('USD')) return null;
+    const base = pair.slice(0, -3);
+    if (!base) return null;
+    if (base === 'USDT') return 'COINBASE:USDTUSD';
+    if (base === 'USDC') return 'COINBASE:USDCUSD';
+    return `BINANCE:${base}USDT`;
+}
+
+function getSelectedTVSymbol(pair = selectedPairVal) {
+    const key = String(pair || '').replace('/', '').toUpperCase();
+    return TV_SYMBOL_MAP[key] || guessCryptoSymbol(key) || 'BINANCE:BTCUSDT';
+}
+
 // Trigger immediate refresh on user interactions
 function triggerTurboRefresh() {
     if (!userId) return;
@@ -90,7 +153,7 @@ function renderTradingViewWidget(theme) {
         </div>`;
     const widgetConfig = {
         autosize: true,
-        symbol: 'BINANCE:BTCUSDT',
+        symbol: getSelectedTVSymbol(),
         interval: 'D',
         timezone: 'Etc/UTC',
         theme: theme,
@@ -1644,6 +1707,7 @@ function initializeUI() {
         selectedPairVal = $(this).val();
         selectedPairText = $('#currencyPair option:selected').text();
         fetchPrice(selectedPairVal);
+        renderTradingViewWidget(selectedChartTheme);
     });
 
     $('#chartTheme').on('change', function () {
@@ -1808,6 +1872,7 @@ function initializeUI() {
         resetTradeButtons();
     });
 
+    renderTradingViewWidget(selectedChartTheme);
     fetchPrice(selectedPairVal);
     startPricePolling(fetchPrice);
     renderTradingHistory();
