@@ -90,7 +90,7 @@ function guessCryptoSymbol(value) {
 
 function getSelectedTVSymbol(pair = selectedPairVal) {
     const key = String(pair || '').replace('/', '').toUpperCase();
-    return TV_SYMBOL_MAP[key] || guessCryptoSymbol(key) || 'BINANCE:BTCUSDT';
+    return TV_SYMBOL_MAP[key] || guessCryptoSymbol(key) || null;
 }
 
 // Trigger immediate refresh on user interactions
