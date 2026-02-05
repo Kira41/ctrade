@@ -120,6 +120,27 @@ function normalizePair(string $input): string {
     return strtoupper(preg_replace('/[^A-Z0-9=\.\/:-]/', '', $input));
 }
 
+function guessCryptoTradingViewSymbol(string $pair): ?string {
+    $pair = str_replace('/', '', normalizePair($pair));
+    if (!str_ends_with($pair, 'USD')) {
+        return null;
+    }
+
+    $base = substr($pair, 0, -3);
+    if ($base === '') {
+        return null;
+    }
+
+    if ($base === 'USDT') {
+        return 'COINBASE:USDTUSD';
+    }
+    if ($base === 'USDC') {
+        return 'COINBASE:USDCUSD';
+    }
+
+    return 'BINANCE:' . $base . 'USDT';
+}
+
 function toTradingViewSymbolsFromPair(string $pair): array {
     $pair = normalizePair($pair);
     if ($pair === '') {
@@ -191,25 +212,9 @@ function toTradingViewSymbolsFromPair(string $pair): array {
         return ['FX_IDC:' . $pairNoSlash];
     }
 
-    if (str_ends_with($pairNoSlash, 'USD')) {
-        $base = substr($pairNoSlash, 0, -3);
-        if ($base !== '') {
-            return [
-                'BINANCE:' . $base . 'USDT',
-                'NASDAQ:' . $base,
-                'NYSE:' . $base,
-                'AMEX:' . $base,
-            ];
-        }
-    }
-
-    if (preg_match('/^[A-Z0-9\.\-]{1,20}$/', $pairNoSlash)) {
-        return [
-            'BINANCE:' . $pairNoSlash,
-            'NASDAQ:' . $pairNoSlash,
-            'NYSE:' . $pairNoSlash,
-            'AMEX:' . $pairNoSlash,
-        ];
+    $cryptoGuess = guessCryptoTradingViewSymbol($pairNoSlash);
+    if ($cryptoGuess !== null) {
+        return [$cryptoGuess];
     }
 
     return [];
