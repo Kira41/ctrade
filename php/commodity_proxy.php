@@ -1,5 +1,5 @@
 <?php
-// Market proxy for commodities, forex, stocks, indices and crypto.
+// TradingView-only market proxy.
 // Returns a normalized payload: { price: float, changePercent: float }
 header('Content-Type: application/json');
 
@@ -75,49 +75,8 @@ function fetchTradingViewQuote(string $symbol): ?array {
     ];
 }
 
-function fetchBinanceQuote(string $symbol): ?array {
-    $url = 'https://api.binance.com/api/v3/ticker/24hr?symbol=' . urlencode($symbol);
-    $result = requestJson($url);
-    if (!$result['ok']) {
-        return null;
-    }
-
-    $data = $result['data'];
-    if (!isset($data['lastPrice'])) {
-        return null;
-    }
-
-    return [
-        'price' => (float) $data['lastPrice'],
-        'changePercent' => isset($data['priceChangePercent']) ? (float) $data['priceChangePercent'] : 0.0,
-    ];
-}
-
-function fetchYahooQuote(string $symbol): ?array {
-    $url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' . urlencode($symbol);
-    $result = requestJson($url);
-    if (!$result['ok']) {
-        return null;
-    }
-
-    $row = $result['data']['quoteResponse']['result'][0] ?? null;
-    if (!is_array($row)) {
-        return null;
-    }
-
-    $price = $row['regularMarketPrice'] ?? null;
-    if (!is_numeric($price)) {
-        return null;
-    }
-
-    return [
-        'price' => (float) $price,
-        'changePercent' => isset($row['regularMarketChangePercent']) ? (float) $row['regularMarketChangePercent'] : 0.0,
-    ];
-}
-
 function normalizePair(string $input): string {
-    return strtoupper(preg_replace('/[^A-Z0-9=\.\/:-]/', '', $input));
+    return strtoupper(preg_replace('/[^A-Z0-9=\.\/:!-]/', '', $input));
 }
 
 function guessCryptoTradingViewSymbol(string $pair): ?string {
@@ -141,182 +100,81 @@ function guessCryptoTradingViewSymbol(string $pair): ?string {
     return 'BINANCE:' . $base . 'USDT';
 }
 
-function toTradingViewSymbolsFromPair(string $pair): array {
-    $pair = normalizePair($pair);
+function toTradingViewSymbolFromPair(string $pair): ?string {
+    $pair = str_replace('/', '', normalizePair($pair));
     if ($pair === '') {
-        return [];
+        return null;
     }
 
     $directMap = [
-        // TradingView symbols adapted from the provided widget mapping.
-        // Commodities
-        'GOLDUSD' => ['CMCMARKETS:GOLD'],
-        'SILVERUSD' => ['CMCMARKETS:SILVER'],
-        'PLATINUMUSD' => ['CMCMARKETS:PLATINUM'],
-        'COPPERUSD' => ['CMCMARKETS:COPPER'],
-        'WTIUSD' => ['TVC:USOIL'],
-        'BRENTUSD' => ['TVC:UKOIL'],
-        'NATGASUSD' => ['SKILLING:NATGAS'],
-        'COALUSD' => ['ICEEUR:NCF1!'],
-        'ALUMINUMUSD' => ['FUSIONMARKETS:XALUSD'],
-        'NICKELUSD' => ['EIGHTCAP:XNIUSD'],
-        'ZINCUSD' => ['FUSIONMARKETS:XZNUSD'],
-        'LEADUSD' => ['FUSIONMARKETS:XPBUSD'],
-        'IRONOREUSD' => ['COMEX:TIO1!'],
-        'WHEATUSD' => ['SKILLING:WHEAT'],
-        'CORNUSD' => ['SKILLING:CORN'],
-        'SOYBEANUSD' => ['SKILLING:SOYBEAN'],
-        'COFFEEUSD' => ['SKILLING:COFFEE'],
-        'COCOAUSD' => ['SKILLING:COCOA'],
-        'SUGARUSD' => ['SKILLING:SUGAR'],
-        'COTTONUSD' => ['SKILLING:COTTON'],
-
-        // Indices
-        'SP500USD' => ['FOREXCOM:SPXUSD'],
-        'NASDAQ100USD' => ['FOREXCOM:NSXUSD'],
-        'DJIAUSD' => ['FOREXCOM:DJI'],
-        'FTSE100USD' => ['FOREXCOM:UKXGBP'],
-        'DAX30USD' => ['INDEX:DEU40'],
-        'CAC40USD' => ['INDEX:CAC40'],
-        'NIKKEI225USD' => ['INDEX:NKY'],
-        'HANGSENGUSD' => ['INDEX:HSI'],
-        'SHCOMPUSD' => ['SSE:000001'],
-        'RUSSELL2000USD' => ['FOREXCOM:US2000'],
-
-        // Forex
-        'USDJPY' => ['FX_IDC:USDJPY'],
-        'USDGBP' => ['FX_IDC:GBPUSD'],
-        'USDEUR' => ['FX_IDC:EURUSD'],
-        'USDCHF' => ['FX_IDC:USDCHF'],
-        'USDCAD' => ['FX_IDC:USDCAD'],
-        'AUDUSD' => ['FX_IDC:AUDUSD'],
-        'NZDUSD' => ['FX_IDC:NZDUSD'],
-        'EURGBP' => ['FX_IDC:EURGBP'],
-        'EURJPY' => ['FX_IDC:EURJPY'],
-        'GBPJPY' => ['FX_IDC:GBPJPY'],
-
-        // Major crypto
-        'BTCUSD' => ['COINBASE:BTCUSD'],
-        'ETHUSD' => ['COINBASE:ETHUSD'],
-        'USDTUSD' => ['COINBASE:USDTUSD'],
-        'USDCUSD' => ['COINBASE:USDCUSD'],
+        'GOLDUSD' => 'CMCMARKETS:GOLD',
+        'SILVERUSD' => 'CMCMARKETS:SILVER',
+        'PLATINUMUSD' => 'CMCMARKETS:PLATINUM',
+        'COPPERUSD' => 'CMCMARKETS:COPPER',
+        'WTIUSD' => 'TVC:USOIL',
+        'BRENTUSD' => 'TVC:UKOIL',
+        'NATGASUSD' => 'SKILLING:NATGAS',
+        'COALUSD' => 'ICEEUR:NCF1!',
+        'ALUMINUMUSD' => 'FUSIONMARKETS:XALUSD',
+        'NICKELUSD' => 'EIGHTCAP:XNIUSD',
+        'ZINCUSD' => 'FUSIONMARKETS:XZNUSD',
+        'LEADUSD' => 'FUSIONMARKETS:XPBUSD',
+        'IRONOREUSD' => 'COMEX:TIO1!',
+        'WHEATUSD' => 'SKILLING:WHEAT',
+        'CORNUSD' => 'SKILLING:CORN',
+        'SOYBEANUSD' => 'SKILLING:SOYBEAN',
+        'COFFEEUSD' => 'SKILLING:COFFEE',
+        'COCOAUSD' => 'SKILLING:COCOA',
+        'SUGARUSD' => 'SKILLING:SUGAR',
+        'COTTONUSD' => 'SKILLING:COTTON',
+        'SP500USD' => 'FOREXCOM:SPXUSD',
+        'NASDAQ100USD' => 'FOREXCOM:NSXUSD',
+        'DJIAUSD' => 'FOREXCOM:DJI',
+        'FTSE100USD' => 'FOREXCOM:UKXGBP',
+        'DAX30USD' => 'INDEX:DEU40',
+        'CAC40USD' => 'INDEX:CAC40',
+        'NIKKEI225USD' => 'INDEX:NKY',
+        'HANGSENGUSD' => 'INDEX:HSI',
+        'SHCOMPUSD' => 'SSE:000001',
+        'RUSSELL2000USD' => 'FOREXCOM:US2000',
+        'USDJPY' => 'FX_IDC:USDJPY',
+        'USDGBP' => 'FX_IDC:GBPUSD',
+        'USDEUR' => 'FX_IDC:EURUSD',
+        'USDCHF' => 'FX_IDC:USDCHF',
+        'USDCAD' => 'FX_IDC:USDCAD',
+        'AUDUSD' => 'FX_IDC:AUDUSD',
+        'NZDUSD' => 'FX_IDC:NZDUSD',
+        'EURGBP' => 'FX_IDC:EURGBP',
+        'EURJPY' => 'FX_IDC:EURJPY',
+        'GBPJPY' => 'FX_IDC:GBPJPY',
+        'BTCUSD' => 'COINBASE:BTCUSD',
+        'ETHUSD' => 'COINBASE:ETHUSD',
+        'USDTUSD' => 'COINBASE:USDTUSD',
+        'USDCUSD' => 'COINBASE:USDCUSD',
     ];
 
     if (isset($directMap[$pair])) {
         return $directMap[$pair];
     }
 
-    $pairNoSlash = str_replace('/', '', $pair);
-
-    if (preg_match('/^[A-Z]{6}$/', $pairNoSlash)) {
-        return ['FX_IDC:' . $pairNoSlash];
-    }
-
-    $cryptoGuess = guessCryptoTradingViewSymbol($pairNoSlash);
-    if ($cryptoGuess !== null) {
-        return [$cryptoGuess];
-    }
-
-    return [];
-}
-
-function toYahooSymbolFromPair(string $pair): ?string {
-    $pair = normalizePair($pair);
-    if ($pair === '') {
-        return null;
-    }
-
-    $map = [
-        // Crypto exceptions and unsupported Binance pairs
-        'OKBUSD' => 'OKB-USD',
-
-        // Stocks
-        'AAPLUSD' => 'AAPL', 'MSFTUSD' => 'MSFT', 'AMZNUSD' => 'AMZN', 'TSLAUSD' => 'TSLA',
-        'GOOGLUSD' => 'GOOGL', 'METAUSD' => 'META', 'NVDAUSD' => 'NVDA', 'BRK.BUSD' => 'BRK-B',
-        'JPMUSD' => 'JPM', 'JNJUSD' => 'JNJ', 'VUSD' => 'V', 'MAUSD' => 'MA', 'PGUSD' => 'PG',
-        'KOUSD' => 'KO', 'PEPUSD' => 'PEP', 'INTCUSD' => 'INTC', 'CSCOUSD' => 'CSCO', 'WMTUSD' => 'WMT',
-        'XOMUSD' => 'XOM', 'CVXUSD' => 'CVX', 'DISUSD' => 'DIS', 'NKEUSD' => 'NKE', 'MCDUSD' => 'MCD',
-        'PFEUSD' => 'PFE', 'MRNAUSD' => 'MRNA', 'ABBVUSD' => 'ABBV', 'CRMUSD' => 'CRM', 'ADBEUSD' => 'ADBE',
-        'ORCLUSD' => 'ORCL', 'TUSD' => 'T', 'VZUSD' => 'VZ', 'BAUSD' => 'BA', 'CATUSD' => 'CAT',
-        'HONUSD' => 'HON', 'LMTUSD' => 'LMT', 'SBUXUSD' => 'SBUX', 'GEUSD' => 'GE', 'IBMUSD' => 'IBM',
-        'SHELUSD' => 'SHEL', 'BPUSD' => 'BP', 'TTEUSD' => 'TTE', 'SIEGYUSD' => 'SIEGY', 'SAPUSD' => 'SAP',
-        'VWAGYUSD' => 'VWAGY', 'BMWYYUSD' => 'BMWYY', 'TMUSD' => 'TM', 'SONYUSD' => 'SONY',
-        'SSNLFUSD' => 'SSNLF', 'BABAUSD' => 'BABA', 'TCEHYUSD' => 'TCEHY', 'PYPLUSD' => 'PYPL',
-
-        // Indices
-        'SP500USD' => '^GSPC', 'DJIAUSD' => '^DJI', 'NASDAQ100USD' => '^NDX', 'FTSE100USD' => '^FTSE',
-        'DAX30USD' => '^GDAXI', 'CAC40USD' => '^FCHI', 'NIKKEI225USD' => '^N225', 'HANGSENGUSD' => '^HSI',
-        'SHCOMPUSD' => '000001.SS', 'RUSSELL2000USD' => '^RUT',
-
-        // Commodities
-        'GOLDUSD' => 'GC=F', 'SILVERUSD' => 'SI=F', 'PLATINUMUSD' => 'PL=F', 'COPPERUSD' => 'HG=F',
-        'WTIUSD' => 'CL=F', 'BRENTUSD' => 'BZ=F', 'NATGASUSD' => 'NG=F', 'COALUSD' => 'MTF=F',
-        'ALUMINUMUSD' => 'ALI=F', 'NICKELUSD' => 'NICKEL=F', 'ZINCUSD' => 'ZNC=F', 'LEADUSD' => 'PBL=F',
-        'IRONOREUSD' => 'TIO=F', 'WHEATUSD' => 'ZW=F', 'CORNUSD' => 'ZC=F', 'SOYBEANUSD' => 'ZS=F',
-        'COFFEEUSD' => 'KC=F', 'COCOAUSD' => 'CC=F', 'SUGARUSD' => 'SB=F', 'COTTONUSD' => 'CT=F',
-    ];
-
-    if (isset($map[$pair])) {
-        return $map[$pair];
-    }
-
-    if (preg_match('/^[A-Z0-9]{2,10}USD$/', $pair)) {
-        return substr($pair, 0, -3) . '-USD';
-    }
-
-    return null;
+    return guessCryptoTradingViewSymbol($pair);
 }
 
 $pair = isset($_GET['pair']) ? (string) $_GET['pair'] : '';
-$explicitSymbol = isset($_GET['symbol']) ? normalizePair((string) $_GET['symbol']) : '';
 
-$yahooSymbol = null;
-if ($explicitSymbol !== '' && preg_match('/[=\^]|\./', $explicitSymbol)) {
-    $yahooSymbol = $explicitSymbol;
-} elseif ($pair !== '') {
-    $yahooSymbol = toYahooSymbolFromPair($pair);
+if ($pair === '') {
+    errorResponse('Missing pair parameter.', 400);
 }
 
-if ($yahooSymbol !== null) {
-    $yahoo = fetchYahooQuote($yahooSymbol);
-    if ($yahoo !== null) {
-        echo json_encode($yahoo);
-        exit;
-    }
+$tvSymbol = toTradingViewSymbolFromPair($pair);
+if ($tvSymbol === null) {
+    errorResponse('No TradingView mapping found for this pair.', 404);
 }
 
-$binanceSymbol = '';
-if ($pair !== '') {
-    $pairKey = str_replace('/', '', normalizePair($pair));
-    if (str_ends_with($pairKey, 'USD')) {
-        $binanceSymbol = substr($pairKey, 0, -3) . 'USDT';
-    } elseif (preg_match('/^[A-Z0-9]{5,20}$/', $pairKey)) {
-        $binanceSymbol = $pairKey;
-    }
+$tvQuote = fetchTradingViewQuote($tvSymbol);
+if ($tvQuote !== null) {
+    echo json_encode($tvQuote);
+    exit;
 }
 
-if ($binanceSymbol !== '') {
-    $binance = fetchBinanceQuote($binanceSymbol);
-    if ($binance !== null) {
-        echo json_encode($binance);
-        exit;
-    }
-}
-
-$tvSymbols = [];
-if ($explicitSymbol !== '') {
-    $tvSymbols[] = $explicitSymbol;
-}
-if ($pair !== '') {
-    $tvSymbols = array_values(array_unique(array_merge($tvSymbols, toTradingViewSymbolsFromPair($pair))));
-}
-
-foreach ($tvSymbols as $symbol) {
-    $tvQuote = fetchTradingViewQuote($symbol);
-    if ($tvQuote !== null) {
-        echo json_encode($tvQuote);
-        exit;
-    }
-}
-
-errorResponse('Unable to fetch price for this pair.');
+errorResponse('Unable to fetch TradingView price for this pair.');
