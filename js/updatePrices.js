@@ -1562,34 +1562,17 @@ function initializeUI() {
         const fetchFor = pair;
         currentPricePair = pair;
         const commoditySymbol = getCommoditySymbol(pair);
-        if (commoditySymbol) {
-            fetch(`php/commodity_proxy.php?symbol=${encodeURIComponent(commoditySymbol)}`, { signal: priceFetchController.signal })
-                .then(r => r.json())
-                .then(info => {
-                    if (currentPricePair !== fetchFor) return;
-                    currentPrice = parseFloat(info.price);
-                    priceChange = parseFloat(info.changePercent);
-                    updatePriceUI();
-                })
-                .catch(err => {
-                    if (err.name === 'AbortError') return;
-                    if (currentPricePair !== fetchFor) return;
-                    $('#currentPrice').text('N/A');
-                    $('#priceChange').text('-');
-                });
-            return;
-        }
+        const query = commoditySymbol
+            ? `symbol=${encodeURIComponent(commoditySymbol)}`
+            : `pair=${encodeURIComponent(pair)}`;
 
-        const symbol = getBinanceSymbol(pair);
-        // Use a backend proxy to avoid CORS issues and handle network errors gracefully
-        fetch(`php/binance_proxy.php?mode=24hr&symbol=${symbol}`, { signal: priceFetchController.signal })
+        fetch(`php/commodity_proxy.php?${query}`, { signal: priceFetchController.signal })
             .then(r => r.json())
             .then(info => {
-                if (currentPricePair !== fetchFor) return; // ignore stale response
-                currentPrice = parseFloat(info.lastPrice);
-                priceChange = parseFloat(info.priceChangePercent);
+                if (currentPricePair !== fetchFor) return;
+                currentPrice = parseFloat(info.price);
+                priceChange = parseFloat(info.changePercent);
                 updatePriceUI();
-                // Market orders execute immediately; no pending conditions
             })
             .catch(err => {
                 if (err.name === 'AbortError') return;
@@ -1601,19 +1584,12 @@ function initializeUI() {
 
     async function fetchCurrentPrice(pair) {
         const commoditySymbol = getCommoditySymbol(pair);
-        if (commoditySymbol) {
-            try {
-                const resp = await fetch(`php/commodity_proxy.php?symbol=${encodeURIComponent(commoditySymbol)}`);
-                const info = await resp.json();
-                return parseFloat(info.price);
-            } catch (e) {
-                return NaN;
-            }
-        }
+        const query = commoditySymbol
+            ? `symbol=${encodeURIComponent(commoditySymbol)}`
+            : `pair=${encodeURIComponent(pair)}`;
 
-        const symbol = getBinanceSymbol(pair);
         try {
-            const resp = await fetch(`php/binance_proxy.php?mode=price&symbol=${symbol}`);
+            const resp = await fetch(`php/commodity_proxy.php?${query}`);
             const info = await resp.json();
             return parseFloat(info.price);
         } catch (e) {
