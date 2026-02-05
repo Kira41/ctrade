@@ -9,7 +9,7 @@ function errorResponse(string $message, int $code = 500): void {
     exit;
 }
 
-function requestJson(string $url): array {
+function requestJson(string $url, string $method = 'GET', ?array $payload = null): array {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -17,10 +17,20 @@ function requestJson(string $url): array {
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($ch, CURLOPT_PROXY, '');
     curl_setopt($ch, CURLOPT_NOPROXY, '*');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+
+    $headers = [
         'Accept: application/json',
         'User-Agent: Mozilla/5.0 (compatible; CoinDashboard/1.0)'
-    ]);
+    ];
+
+    if ($method === 'POST') {
+        $jsonBody = json_encode($payload ?? []);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
+        $headers[] = 'Content-Type: application/json';
+    }
+
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $response = curl_exec($ch);
     $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -39,21 +49,29 @@ function requestJson(string $url): array {
     return ['ok' => true, 'data' => $decoded];
 }
 
-function fetchYahooQuote(string $symbol): ?array {
-    $url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' . urlencode($symbol);
-    $result = requestJson($url);
+function fetchTradingViewQuote(string $symbol): ?array {
+    $url = 'https://scanner.tradingview.com/global/scan';
+    $payload = [
+        'symbols' => [
+            'tickers' => [$symbol],
+            'query' => ['types' => []],
+        ],
+        'columns' => ['close', 'change'],
+    ];
+
+    $result = requestJson($url, 'POST', $payload);
     if (!$result['ok']) {
         return null;
     }
 
-    $quote = $result['data']['quoteResponse']['result'][0] ?? null;
-    if (!is_array($quote) || !isset($quote['regularMarketPrice'])) {
+    $row = $result['data']['data'][0]['d'] ?? null;
+    if (!is_array($row) || !isset($row[0])) {
         return null;
     }
 
     return [
-        'price' => (float) $quote['regularMarketPrice'],
-        'changePercent' => isset($quote['regularMarketChangePercent']) ? (float) $quote['regularMarketChangePercent'] : 0.0,
+        'price' => (float) $row[0],
+        'changePercent' => isset($row[1]) ? (float) $row[1] : 0.0,
     ];
 }
 
@@ -76,76 +94,77 @@ function fetchBinanceQuote(string $symbol): ?array {
 }
 
 function normalizePair(string $input): string {
-    return strtoupper(preg_replace('/[^A-Z0-9=\.\/-]/', '', $input));
+    return strtoupper(preg_replace('/[^A-Z0-9=\.\/:-]/', '', $input));
 }
 
-function toYahooSymbolFromPair(string $pair): ?string {
+function toTradingViewSymbolsFromPair(string $pair): array {
     $pair = normalizePair($pair);
     if ($pair === '') {
-        return null;
+        return [];
     }
 
-    $commodityMap = [
-        'GOLDUSD' => 'GC=F',
-        'SILVERUSD' => 'SI=F',
-        'PLATINUMUSD' => 'PL=F',
-        'COPPERUSD' => 'HG=F',
-        'WTIUSD' => 'CL=F',
-        'BRENTUSD' => 'BZ=F',
-        'NATGASUSD' => 'NG=F',
-        'COALUSD' => 'MTF=F',
-        'ALUMINUMUSD' => 'ALI=F',
-        'NICKELUSD' => 'NICKEL=F',
-        'ZINCUSD' => 'ZNC=F',
-        'LEADUSD' => 'PBL=F',
-        'IRONOREUSD' => 'TIO=F',
-        'WHEATUSD' => 'ZW=F',
-        'CORNUSD' => 'ZC=F',
-        'SOYBEANUSD' => 'ZS=F',
-        'COFFEEUSD' => 'KC=F',
-        'COCOAUSD' => 'CC=F',
-        'SUGARUSD' => 'SB=F',
-        'COTTONUSD' => 'CT=F',
+    $directMap = [
+        // Extracted from TradingView widget presets used in the provided code.
+        'EURUSD' => ['FX_IDC:EURUSD'],
+        'USDJPY' => ['FX_IDC:USDJPY'],
+        'GBPUSD' => ['FX_IDC:GBPUSD'],
+        'AUDUSD' => ['FX_IDC:AUDUSD'],
+        'USDCAD' => ['FX_IDC:USDCAD'],
+        'USDCHF' => ['FX_IDC:USDCHF'],
+        'EURGBP' => ['FX_IDC:EURGBP'],
+        'EURJPY' => ['FX_IDC:EURJPY'],
+        'SP500USD' => ['FOREXCOM:SPXUSD'],
+        'NASDAQ100USD' => ['FOREXCOM:NSXUSD'],
+        'DJIAUSD' => ['FOREXCOM:DJI'],
+        'DXYUSD' => ['INDEX:DXY'],
+        'FTSE100USD' => ['FOREXCOM:UKXGBP'],
+        'DAX30USD' => ['INDEX:DEU40'],
+        'CAC40USD' => ['INDEX:CAC40'],
+        'NIKKEI225USD' => ['INDEX:NKY'],
+        'HANGSENGUSD' => ['INDEX:HSI'],
+        'WTIUSD' => ['PYTH:WTI3!'],
+        'GOLDUSD' => ['CMCMARKETS:GOLD'],
+        'SILVERUSD' => ['CMCMARKETS:SILVER'],
+        'PLATINUMUSD' => ['CMCMARKETS:PLATINUM'],
+        'COPPERUSD' => ['CMCMARKETS:COPPER'],
+        'COFFEEUSD' => ['BMFBOVESPA:ICF1!'],
+        'COTTONUSD' => ['CMCMARKETS:COTTON'],
+        'SOYBEANUSD' => ['BMFBOVESPA:SJC1!'],
+        'CORNUSD' => ['BMFBOVESPA:CCM1!'],
     ];
 
-    if (isset($commodityMap[$pair])) {
-        return $commodityMap[$pair];
+    if (isset($directMap[$pair])) {
+        return $directMap[$pair];
     }
 
-    $indexMap = [
-        'SP500USD' => '^GSPC',
-        'DJIAUSD' => '^DJI',
-        'NASDAQ100USD' => '^NDX',
-        'FTSE100USD' => '^FTSE',
-        'DAX30USD' => '^GDAXI',
-        'CAC40USD' => '^FCHI',
-        'NIKKEI225USD' => '^N225',
-        'HANGSENGUSD' => '^HSI',
-        'SHCOMPUSD' => '000001.SS',
-        'RUSSELL2000USD' => '^RUT',
-    ];
+    $pairNoSlash = str_replace('/', '', $pair);
 
-    if (isset($indexMap[$pair])) {
-        return $indexMap[$pair];
+    if (preg_match('/^[A-Z]{6}$/', $pairNoSlash)) {
+        return ['FX_IDC:' . $pairNoSlash];
     }
 
-    $forexPair = str_replace('/', '', $pair);
-    if (preg_match('/^[A-Z]{6}$/', $forexPair)) {
-        return $forexPair . '=X';
-    }
-
-    if (str_ends_with($pair, 'USD')) {
-        return substr($pair, 0, -3);
-    }
-
-    if (str_contains($pair, '/')) {
-        [$base, $quote] = array_pad(explode('/', $pair, 2), 2, '');
-        if ($base !== '' && $quote !== '') {
-            return $base . '-' . $quote;
+    if (str_ends_with($pairNoSlash, 'USD')) {
+        $base = substr($pairNoSlash, 0, -3);
+        if ($base !== '') {
+            return [
+                'BINANCE:' . $base . 'USDT',
+                'NASDAQ:' . $base,
+                'NYSE:' . $base,
+                'AMEX:' . $base,
+            ];
         }
     }
 
-    return $pair;
+    if (preg_match('/^[A-Z0-9\.\-]{1,20}$/', $pairNoSlash)) {
+        return [
+            'BINANCE:' . $pairNoSlash,
+            'NASDAQ:' . $pairNoSlash,
+            'NYSE:' . $pairNoSlash,
+            'AMEX:' . $pairNoSlash,
+        ];
+    }
+
+    return [];
 }
 
 $pair = isset($_GET['pair']) ? (string) $_GET['pair'] : '';
@@ -161,8 +180,6 @@ if ($pair !== '') {
     }
 }
 
-$yahooSymbol = $explicitSymbol !== '' ? $explicitSymbol : toYahooSymbolFromPair($pair);
-
 if ($binanceSymbol !== '') {
     $binance = fetchBinanceQuote($binanceSymbol);
     if ($binance !== null) {
@@ -171,10 +188,18 @@ if ($binanceSymbol !== '') {
     }
 }
 
-if ($yahooSymbol !== null && $yahooSymbol !== '') {
-    $yahoo = fetchYahooQuote($yahooSymbol);
-    if ($yahoo !== null) {
-        echo json_encode($yahoo);
+$tvSymbols = [];
+if ($explicitSymbol !== '') {
+    $tvSymbols[] = $explicitSymbol;
+}
+if ($pair !== '') {
+    $tvSymbols = array_values(array_unique(array_merge($tvSymbols, toTradingViewSymbolsFromPair($pair))));
+}
+
+foreach ($tvSymbols as $symbol) {
+    $tvQuote = fetchTradingViewQuote($symbol);
+    if ($tvQuote !== null) {
+        echo json_encode($tvQuote);
         exit;
     }
 }
