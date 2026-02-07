@@ -22,7 +22,7 @@ try {
     lastTradeTime = 0;
 }
 // Expose the latest fetched price globally for other scripts
-var currentPrice = 0;
+var currentPrice = NaN;
 // Track the currently selected trading pair
 let selectedPairVal = $('#currencyPair').val();
 let selectedPairText = $('#currencyPair option:selected').text();
@@ -1512,9 +1512,9 @@ function initializeUI() {
     renderWithdrawHistory();
     loadTransactions();
 
-    currentPrice = 0;
+    currentPrice = NaN;
     let currentPricePair = '';
-    let priceChange = 0;
+    let priceChange = NaN;
 
     function renderTradingHistory() {
         const $tbodyTrading = $('#tradingHistory');
@@ -1547,12 +1547,15 @@ function initializeUI() {
     }
 
     function updatePriceUI() {
-        $('#currentPrice').text('$' + currentPrice.toLocaleString());
-        const changeText = priceChange.toFixed(2) + '%';
+        const hasPrice = Number.isFinite(currentPrice);
+        $('#currentPrice').text(hasPrice ? ('$' + currentPrice.toLocaleString()) : 'loading...');
+
+        const hasChange = Number.isFinite(priceChange);
+        const changeText = hasChange ? (priceChange.toFixed(2) + '%') : 'loading...';
         $('#priceChange')
             .text(changeText)
-            .removeClass('text-success text-danger')
-            .addClass(priceChange >= 0 ? 'text-success' : 'text-danger');
+            .removeClass('text-success text-danger text-muted')
+            .addClass(hasChange ? (priceChange >= 0 ? 'text-success' : 'text-danger') : 'text-muted');
     }
 
     function fetchPrice(pair, { force = false } = {}) {
@@ -1567,8 +1570,8 @@ function initializeUI() {
             .then(r => r.json())
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
-                currentPrice = parseFloat(info.price);
-                priceChange = parseFloat(info.changePercent);
+                currentPrice = parseFloat(info.market_last ?? info.price);
+                priceChange = parseFloat((info.market_daily_Pchg ?? info.changePercent ?? '').replace(/[−–]/g, '-').replace('%', ''));
                 updatePriceUI();
             })
             .catch(err => {
@@ -1588,7 +1591,7 @@ function initializeUI() {
         try {
             const resp = await fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`);
             const info = await resp.json();
-            return parseFloat(info.price);
+            return parseFloat(info.market_last ?? info.price);
         } catch (e) {
             return NaN;
         }
