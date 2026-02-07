@@ -218,3 +218,22 @@ CREATE TABLE ftd (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES personal_data(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+CREATE TABLE market_data_cache (
+    pair VARCHAR(64) PRIMARY KEY,
+    source VARCHAR(32) NOT NULL,
+    payload JSON NOT NULL,
+    value DECIMAL(30,10),
+    change_value DECIMAL(30,10),
+    change_percent DECIMAL(30,10),
+    open_value DECIMAL(30,10),
+    high_value DECIMAL(30,10),
+    low_value DECIMAL(30,10),
+    previous_value DECIMAL(30,10),
+    is_stale TINYINT(1) DEFAULT 0,
+    updated_at DATETIME NOT NULL,
+    last_fetch_ms INT,
+    last_error TEXT,
+    INDEX idx_market_data_cache_updated (updated_at)
+) ENGINE=InnoDB;
+
