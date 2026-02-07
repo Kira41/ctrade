@@ -112,6 +112,43 @@ function parseDollar(str) {
     return parseFloat(String(str).replace(/[^0-9.-]+/g, '')) || 0;
 }
 
+function parseMarketNumber(value) {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+
+    let text = String(value ?? '')
+        .trim()
+        .replace(/[−–]/g, '-')
+        .replace(/[%\s\$€£¥]/g, '');
+
+    if (!text) return NaN;
+
+    const lastComma = text.lastIndexOf(',');
+    const lastDot = text.lastIndexOf('.');
+
+    if (lastComma !== -1 && lastDot !== -1) {
+        // When both separators are present, the right-most one is the decimal separator.
+        if (lastComma > lastDot) {
+            text = text.replace(/\./g, '').replace(',', '.');
+        } else {
+            text = text.replace(/,/g, '');
+        }
+    } else if (lastComma !== -1) {
+        // Single comma can be decimal or thousands separator.
+        if ((text.match(/,/g) || []).length > 1) {
+            text = text.replace(/,/g, '');
+        } else {
+            const decimals = text.length - lastComma - 1;
+            const integerDigits = text.slice(0, lastComma).replace('-', '').length;
+            // 4,964 => thousands separator, but 4964,620 => decimal separator.
+            text = (decimals === 3 && integerDigits <= 3)
+                ? text.replace(',', '')
+                : text.replace(',', '.');
+        }
+    }
+
+    return Number(text);
+}
+
 function formatDollar(num) {
     const hasDecimals = Number(num) % 1 !== 0;
     return Number(num).toLocaleString('en-US', {
@@ -1570,8 +1607,8 @@ function initializeUI() {
             .then(r => r.json())
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
-                currentPrice = parseFloat(info.market_last ?? info.price);
-                priceChange = parseFloat((info.market_daily_Pchg ?? info.changePercent ?? '').replace(/[−–]/g, '-').replace('%', ''));
+                currentPrice = parseMarketNumber(info.market_last ?? info.price);
+                priceChange = parseMarketNumber(info.market_daily_Pchg ?? info.changePercent);
                 updatePriceUI();
             })
             .catch(err => {
@@ -1591,7 +1628,7 @@ function initializeUI() {
         try {
             const resp = await fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`);
             const info = await resp.json();
-            return parseFloat(info.market_last ?? info.price);
+            return parseMarketNumber(info.market_last ?? info.price);
         } catch (e) {
             return NaN;
         }
