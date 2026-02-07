@@ -1555,8 +1555,9 @@ function initializeUI() {
             .addClass(priceChange >= 0 ? 'text-success' : 'text-danger');
     }
 
-    function fetchPrice(pair) {
+    function fetchPrice(pair, { force = false } = {}) {
         if (priceFetchController) {
+            if (!force && currentPricePair === pair) return;
             priceFetchController.abort();
         }
         priceFetchController = new AbortController();
@@ -1575,6 +1576,11 @@ function initializeUI() {
                 if (currentPricePair !== fetchFor) return;
                 $('#currentPrice').text('N/A');
                 $('#priceChange').text('-');
+            })
+            .finally(() => {
+                if (currentPricePair === fetchFor) {
+                    priceFetchController = null;
+                }
             });
     }
 
@@ -1710,7 +1716,7 @@ function initializeUI() {
     $('#currencyPair').on('change', function () {
         selectedPairVal = $(this).val();
         selectedPairText = $('#currencyPair option:selected').text();
-        fetchPrice(selectedPairVal);
+        fetchPrice(selectedPairVal, { force: true });
         renderTradingViewWidget(selectedChartTheme);
     });
 
