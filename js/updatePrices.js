@@ -1825,7 +1825,7 @@ function initializeUI() {
         const apiPair = pairText.includes('/') ? pairText : pairText.replace(/(USDT|USD)$/, '/$1');
         let resp;
         const serverOrderType = orderType === 'stoplimit' ? 'stop_limit' : orderType;
-        const payload = { user_id: userId, pair: apiPair, quantity: amount, side: isBuy ? 'buy' : 'sell', type: serverOrderType };
+        const payload = { user_id: userId, pair: apiPair, market_symbol: pairVal, quantity: amount, side: isBuy ? 'buy' : 'sell', type: serverOrderType };
 
         if (orderType === 'limit' || orderType === 'stoplimit' || orderType === 'oco') {
             const limitPrice = parseFloat($('#limitPrice').val());
@@ -2000,6 +2000,7 @@ function initializeUI() {
         const slType = $('#stopLossType').val();
         const payload = { user_id:userId,
             pair: pairText.includes('/') ? pairText : pairText.replace(/(USDT|USD)$/, '/$1'),
+            market_symbol: pairVal,
             side:'sell', quantity: qty, type:typeMap[slType] };
         if(slType==='price') payload.stop_price=parseFloat($('#stopLossPrice').val());
         if(slType==='percentage') payload.stop_percentage=parseFloat($('#stopLossPercentage').val());
