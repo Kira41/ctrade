@@ -78,7 +78,7 @@ def build_urls(exchange: str, symbol: str):
 
 @app.get("/tv/quote")
 def tv_quote(
-    currencyPair: Optional[str] = Query(default=None, description='Example: BINANCE:BTCUSDT'),
+    currencyPair: Optional[str] = Query(default=None, description='Example: COINBASE:BTCUSD'),
     pair: Optional[str] = Query(default=None, description='Alias of currencyPair'),
     x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
 ):

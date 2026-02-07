@@ -1,82 +1,32 @@
 <?php
 require_once __DIR__.'/balance.php';
+require_once __DIR__.'/market_data_provider.php';
 
 function fetchTvQuotePrice(string $currencyPair): float {
-    $pair = strtoupper(trim($currencyPair));
-    if ($pair === '' || strpos($pair, ':') === false) return 0.0;
-
-    $url = 'http://171.22.114.97:8000/tv/quote?currencyPair=' . urlencode($pair);
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 4,
-        CURLOPT_CONNECTTIMEOUT => 2,
-        CURLOPT_HTTPHEADER => [
-            'X-API-Key: te_6XvQpK9jR2mN4sA7fH8uC1zL0wY3tG5eB9nD7kS2pV4qR8m',
-            'Accept: application/json',
-            'User-Agent: CoinTrade-PHP-Helpers/1.0'
-        ],
-    ]);
-    $response = curl_exec($ch);
-    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($response === false || $httpCode < 200 || $httpCode >= 300) return 0.0;
-
-    $data = json_decode($response, true);
-    if (!is_array($data)) return 0.0;
-
-    foreach (['market_last', 'price', 'c', 'close', 'last', 'lp'] as $k) {
-        if (isset($data[$k]) && is_numeric($data[$k])) {
-            return (float)$data[$k];
-        }
-    }
-    return 0.0;
+    return getMarketPrice($currencyPair, 2.0);
 }
 
 function getLivePrice(string $pair, ?string $marketSymbol = null): float {
     $pairUpper = strtoupper(trim($pair));
     $marketSymbol = $marketSymbol ? strtoupper(trim($marketSymbol)) : null;
 
-    // Use the same market symbol used by the frontend whenever available.
-    if ($marketSymbol && strpos($marketSymbol, ':') !== false) {
-        $tvPrice = fetchTvQuotePrice($marketSymbol);
-        if ($tvPrice > 0) return $tvPrice;
+    if ($marketSymbol) {
+        $price = getMarketPrice($marketSymbol, 2.0);
+        if ($price > 0) return $price;
     }
 
-    $symbol = str_replace('/', '', $pairUpper);
-    if (strpos($symbol, ':') !== false) {
-        [, $symbol] = array_pad(explode(':', $symbol, 2), 2, '');
-    }
-    if (!preg_match('/USDT$/', $symbol) && preg_match('/USD$/', $symbol)) {
-        $symbol = substr($symbol, 0, -3) . 'USDT';
+    if (strpos($pairUpper, ':') !== false) {
+        $price = getMarketPrice($pairUpper, 2.0);
+        if ($price > 0) return $price;
     }
 
-    if ($symbol !== '') {
-        $url = 'https://api.binance.com/api/v3/ticker/price?symbol=' . $symbol;
-        $context = stream_context_create(['http' => ['timeout' => 3]]);
-        $json = @file_get_contents($url, false, $context);
-        if ($json !== false) {
-            $data = json_decode($json, true);
-            if (isset($data['price']) && is_numeric($data['price'])) {
-                return (float)$data['price'];
-            }
-        }
-    }
-
-    // Fallback: query the internal TV quote service with common exchanges.
     if (preg_match('/^([A-Z0-9\.\-_]{2,20})\/(USD|USDT)$/', $pairUpper, $m)) {
         $base = $m[1];
-        $quotes = ['USDT', 'USD'];
-        $exchanges = ['BINANCE', 'COINBASE', 'BITSTAMP', 'POLONIEX', 'KRAKEN'];
-        foreach ($quotes as $quote) {
-            foreach ($exchanges as $exchange) {
-                $tvPrice = fetchTvQuotePrice($exchange . ':' . $base . $quote);
-                if ($tvPrice > 0) return $tvPrice;
-            }
-        }
+        $quote = $m[2] === 'USDT' ? 'USD' : $m[2];
+        return getMarketPrice('COINBASE:' . $base . $quote, 2.0);
     }
 
-    return 0.0;
+    return getMarketPrice($pairUpper, 2.0);
 }
 
 /**

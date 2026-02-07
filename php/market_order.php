@@ -40,7 +40,7 @@ try {
         $base = $basePart !== '' ? $basePart : $base;
         $quote = $quotePart !== '' ? $quotePart : $quote;
     } elseif (strpos($pairUpper, ':') !== false) {
-        // Accept symbols like BINANCE:BTCUSDT.
+        // Accept symbols like COINBASE:BTCUSD (and legacy encoded forms).
         [, $symbolPart] = array_pad(explode(':', $pairUpper, 2), 2, '');
         $symbol = $symbolPart !== '' ? $symbolPart : $pairUpper;
         if (preg_match('/^(.*)(USDT|USD)$/', $symbol, $m) && !empty($m[1])) {
