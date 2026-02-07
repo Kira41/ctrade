@@ -30,7 +30,29 @@ try {
 
     $pdo = db();
 
-    [$base, $quote] = explode('/', strtoupper($pair));
+    $pairUpper = strtoupper(trim((string)$pair));
+    $base = $pairUpper;
+    $quote = 'USD';
+
+    if (strpos($pairUpper, '/') !== false) {
+        [$basePart, $quotePart] = array_pad(explode('/', $pairUpper, 2), 2, '');
+        $base = $basePart !== '' ? $basePart : $base;
+        $quote = $quotePart !== '' ? $quotePart : $quote;
+    } elseif (strpos($pairUpper, ':') !== false) {
+        // Accept symbols like BINANCE:BTCUSDT.
+        [, $symbolPart] = array_pad(explode(':', $pairUpper, 2), 2, '');
+        $symbol = $symbolPart !== '' ? $symbolPart : $pairUpper;
+        if (preg_match('/^(.*)(USDT|USD)$/', $symbol, $m) && !empty($m[1])) {
+            $base = $m[1];
+            $quote = $m[2];
+        } else {
+            $base = $symbol;
+        }
+    } elseif (preg_match('/^(.*)(USDT|USD)$/', $pairUpper, $m) && !empty($m[1])) {
+        $base = $m[1];
+        $quote = $m[2];
+    }
+
     $price = getLivePrice($pair);
     if ($price <= 0) {
         http_response_code(500);
