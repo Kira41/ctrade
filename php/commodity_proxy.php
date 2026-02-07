@@ -101,10 +101,16 @@ function guessCryptoTradingViewSymbol(string $pair): ?string {
 }
 
 function toTradingViewSymbolFromPair(string $pair): ?string {
-    $pair = str_replace('/', '', normalizePair($pair));
+    $pair = normalizePair($pair);
     if ($pair === '') {
         return null;
     }
+
+    if (str_contains($pair, ':')) {
+        return $pair;
+    }
+
+    $pair = str_replace('/', '', $pair);
 
     $directMap = [
         'GOLDUSD' => 'CMCMARKETS:GOLD',
