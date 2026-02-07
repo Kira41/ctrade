@@ -18,6 +18,7 @@ try {
     $quantity = isset($data['quantity']) ? (float)$data['quantity'] : 0.0;
     $amount   = isset($data['amount']) ? (float)$data['amount'] : 0.0; // USD amount
     $side     = strtolower($data['side'] ?? 'buy');
+    $marketSymbol = isset($data['market_symbol']) ? strtoupper(trim((string)$data['market_symbol'])) : null;
 
     if (!$userId || !$pair || (!($quantity > 0) && !($amount > 0)) || !in_array($side, ['buy','sell'])) {
         http_response_code(400);
@@ -53,7 +54,7 @@ try {
         $quote = $m[2];
     }
 
-    $price = getLivePrice($pair);
+    $price = getLivePrice($pair, $marketSymbol);
     if ($price <= 0) {
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Failed to fetch price']);
