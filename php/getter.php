@@ -34,6 +34,50 @@ function fetchAll($pdo, $sql, $params = []) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function fetchCachedPricesByPair(PDO $pdo, array $pairs): array {
+    $normalizedToRaw = [];
+    foreach ($pairs as $pair) {
+        $rawPair = trim((string)$pair);
+        if ($rawPair === '') {
+            continue;
+        }
+        $normalized = normalizeMarketPair($rawPair);
+        if (!isset($normalizedToRaw[$normalized])) {
+            $normalizedToRaw[$normalized] = [];
+        }
+        $normalizedToRaw[$normalized][] = $rawPair;
+    }
+
+    if (!$normalizedToRaw) {
+        return [];
+    }
+
+    $normalizedPairs = array_keys($normalizedToRaw);
+    $placeholders = implode(',', array_fill(0, count($normalizedPairs), '?'));
+    $stmt = $pdo->prepare('SELECT pair, value, payload FROM market_data_cache WHERE pair IN (' . $placeholders . ')');
+    $stmt->execute($normalizedPairs);
+
+    $prices = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $price = parseNumericValue($row['value'] ?? null);
+        if ($price === null && !empty($row['payload'])) {
+            $payload = json_decode((string)$row['payload'], true);
+            if (is_array($payload)) {
+                $price = parseNumericValue($payload['value'] ?? ($payload['market_last'] ?? null));
+            }
+        }
+        if ($price === null) {
+            continue;
+        }
+
+        foreach ($normalizedToRaw[$row['pair']] ?? [] as $rawPair) {
+            $prices[$rawPair] = (float)$price;
+        }
+    }
+
+    return $prices;
+}
+
 function formatTimeAgoFromDate($dateStr) {
     $ts = strtotime($dateStr);
     if (!$ts) return '';
@@ -114,8 +158,9 @@ if ($verify) {
 }
 
 $openTrades = fetchAll($pdo, 'SELECT id,pair,side,quantity,price FROM trades WHERE user_id = ? AND status="open"', [$userId]);
+$cachedPrices = fetchCachedPricesByPair($pdo, array_column($openTrades, 'pair'));
 foreach ($openTrades as &$t) {
-    $current = getLivePrice($t['pair']);
+    $current = isset($cachedPrices[$t['pair']]) ? (float)$cachedPrices[$t['pair']] : (float)$t['price'];
     $t['current_price'] = $current;
     $sign = $t['side'] === 'buy' ? 1 : -1;
     $t['unrealized_pnl'] = ($current - $t['price']) * $t['quantity'] * $sign;
