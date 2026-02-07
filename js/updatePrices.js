@@ -89,7 +89,11 @@ function guessCryptoSymbol(value) {
 }
 
 function getSelectedTVSymbol(pair = selectedPairVal) {
-    const key = String(pair || '').replace('/', '').toUpperCase();
+    const rawPair = String(pair || '').trim();
+    if (rawPair.includes(':')) {
+        return rawPair.toUpperCase();
+    }
+    const key = rawPair.replace('/', '').toUpperCase();
     return TV_SYMBOL_MAP[key] || guessCryptoSymbol(key) || null;
 }
 
