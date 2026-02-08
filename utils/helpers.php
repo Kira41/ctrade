@@ -30,6 +30,54 @@ function getLivePrice(string $pair, ?string $marketSymbol = null): float {
 }
 
 /**
+ * Fetch all pairs from quotes_client_lib and resolve one pair by its Name field.
+ * Returns null when the pair cannot be found.
+ */
+function getPairSnapshot(string $pair, ?string $marketSymbol = null): ?array {
+    $candidates = [];
+    $pair = trim((string)$pair);
+    if ($pair !== '') {
+        $candidates[] = $pair;
+    }
+
+    $marketSymbol = $marketSymbol ? trim((string)$marketSymbol) : '';
+    if ($marketSymbol !== '') {
+        $candidates[] = $marketSymbol;
+    }
+
+    if (!$candidates) {
+        return null;
+    }
+
+    $payload = quotesClientFetchPayload();
+    if (empty($payload['ok'])) {
+        return null;
+    }
+
+    $rows = is_array($payload['rows'] ?? null) ? $payload['rows'] : [];
+    foreach ($candidates as $candidate) {
+        $row = quotesClientFindRowByPairName($rows, $candidate);
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $price = parseNumericValue($row['Value'] ?? null);
+        if ($price === null) {
+            continue;
+        }
+
+        return [
+            'name' => (string)($row['Name'] ?? $candidate),
+            'value' => (float)$price,
+            'changePercent' => parseNumericValue($row['Chg%'] ?? null),
+            'upstream' => $row,
+        ];
+    }
+
+    return null;
+}
+
+/**
  * Returns market price using the shared quotes client stream.
  * The timestamp argument is preserved for backward compatibility.
  */

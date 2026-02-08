@@ -149,6 +149,57 @@ function parseMarketNumber(value) {
     return Number(text);
 }
 
+function normalizePairName(value) {
+    return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function pairCandidates(pair) {
+    const raw = String(pair || '').trim().toUpperCase();
+    if (!raw) return [];
+
+    const candidates = new Set([raw]);
+    const noExchange = raw.includes(':') ? raw.split(':', 2)[1] : raw;
+    if (noExchange) candidates.add(noExchange);
+
+    if (noExchange.includes('/')) {
+        const [base, quoteRaw] = noExchange.split('/', 2);
+        const quote = quoteRaw === 'USDT' ? 'USD' : (quoteRaw || 'USD');
+        candidates.add(`${base}/${quote}`);
+    } else {
+        const m = noExchange.match(/^([A-Z0-9._-]+)(USDT|USD)$/);
+        if (m && m[1]) {
+            const quote = m[2] === 'USDT' ? 'USD' : m[2];
+            candidates.add(`${m[1]}/${quote}`);
+        }
+    }
+
+    return Array.from(candidates);
+}
+
+function findQuoteRow(rows, pair) {
+    if (!Array.isArray(rows) || !rows.length) return null;
+
+    const exact = new Map();
+    const normalized = new Map();
+    for (const row of rows) {
+        if (!row || typeof row !== 'object') continue;
+        const name = String(row.Name || '').trim().toUpperCase();
+        if (!name) continue;
+        if (!exact.has(name)) exact.set(name, row);
+        const key = normalizePairName(name);
+        if (key && !normalized.has(key)) normalized.set(key, row);
+    }
+
+    for (const candidate of pairCandidates(pair)) {
+        const exactKey = String(candidate).trim().toUpperCase();
+        if (exact.has(exactKey)) return exact.get(exactKey);
+        const normalizedKey = normalizePairName(candidate);
+        if (normalized.has(normalizedKey)) return normalized.get(normalizedKey);
+    }
+
+    return null;
+}
+
 function formatDollar(num) {
     const hasDecimals = Number(num) % 1 !== 0;
     return Number(num).toLocaleString('en-US', {
@@ -1603,12 +1654,14 @@ function initializeUI() {
         priceFetchController = new AbortController();
         const fetchFor = pair;
         currentPricePair = pair;
-        fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`, { signal: priceFetchController.signal })
+        fetch('php/quotes_client.php', { signal: priceFetchController.signal })
             .then(r => r.json())
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
-                currentPrice = parseMarketNumber(info.market_last ?? info.price);
-                priceChange = parseMarketNumber(info.market_daily_Pchg ?? info.changePercent);
+                const row = findQuoteRow(info.rows || [], fetchFor);
+                if (!row) throw new Error('Pair not found');
+                currentPrice = parseMarketNumber(row.Value);
+                priceChange = parseMarketNumber(row['Chg%']);
                 updatePriceUI();
             })
             .catch(err => {
@@ -1626,9 +1679,10 @@ function initializeUI() {
 
     async function fetchCurrentPrice(pair) {
         try {
-            const resp = await fetch(`php/commodity_proxy.php?pair=${encodeURIComponent(pair)}`);
+            const resp = await fetch('php/quotes_client.php');
             const info = await resp.json();
-            return parseMarketNumber(info.market_last ?? info.price);
+            const row = findQuoteRow(info.rows || [], pair);
+            return row ? parseMarketNumber(row.Value) : NaN;
         } catch (e) {
             return NaN;
         }

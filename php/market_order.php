@@ -29,6 +29,13 @@ try {
     require_once __DIR__.'/../config/db_connection.php';
     require_once __DIR__.'/../utils/helpers.php';
 
+    $pairSnapshot = getPairSnapshot((string)$pair, $marketSymbol);
+    if (!$pairSnapshot) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid pair']);
+        exit;
+    }
+
     $pdo = db();
 
     $pairUpper = strtoupper(trim((string)$pair));
