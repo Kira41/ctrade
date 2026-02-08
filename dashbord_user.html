@@ -167,7 +167,7 @@ Mon compte </button>
                         <option value="BINANCE:ADAUSDT">ADA/USD</option>
                         <option value="BINANCE:DOGEUSDT">DOGE/USD</option>
                         <option value="SKILLING:MATICUSD">MATIC/USD</option>
-                        <option value="GBEBROKERS:SOLUSD">SOL/USD</option>
+                        <option value="BINANCE:SOLUSDT">SOL/USD</option>
                         <option value="BINANCE:DOTUSDT">DOT/USD</option>
                         <option value="BINANCE:SHIBUSDT">SHIB/USD</option>
                         <option value="BINANCE:AVAXUSDT">AVAX/USD</option>
@@ -188,13 +188,13 @@ Mon compte </button>
                         <option value="ACTIVTRADES:EOSUSD">EOS/USD</option>
                         <option value="BINANCE:HBARUSDT">HBAR/USD</option>
                         <option value="BINANCE:IOTAUSDT">IOTA/USD</option>
-                        <option value="BINANCE:XMRUSDT">XMR/USD</option>
+                        <option value="CRYPTOCAP:XMR">XMR/USD</option>
                         <option value="BINANCE:BCHUSDT">BCH/USD</option>
                         <option value="BINANCE:NEOUSDT">NEO/USD</option>
                         <option value="BINANCE:EGLDUSDT">EGLD/USD</option>
                         <option value="BINANCE:ZECUSDT">ZEC/USD</option>
                         <option value="BINANCE:CAKEUSDT">CAKE/USD</option>
-                        <option value="BINANCE:KLAYUSDT">KLAY/USD</option>
+                        <option value="CRYPTOCAP:KLAY">KLAY/USD</option>
                         <option value="BINANCE:ONEUSDT">ONE/USD</option>
                         <option value="BINANCE:MANAUSDT">MANA/USD</option>
                         <option value="BINANCE:ENJUSDT">ENJ/USD</option>
@@ -209,6 +209,7 @@ Mon compte </button>
                         <option value="BLUEBERRY:WAVUSD">WAVES/USD</option>
                         <option value="BITMART:SGCUSDT">SGC/USD</option>
                       </optgroup>
+
                       <optgroup label="Stocks">
                         <option value="NASDAQ:AAPL">Apple (AAPL)</option>
                         <option value="NASDAQ:MSFT">Microsoft (MSFT)</option>
@@ -223,12 +224,12 @@ Mon compte </button>
                         <option value="NYSE:V">Visa (V)</option>
                         <option value="NYSE:MA">Mastercard (MA)</option>
                         <option value="NYSE:PG">Procter &amp; Gamble (PG)</option>
-                        <option value="GPW:COLA">Coca-Cola (KO)</option>
+                        <option value="NYSE:KO">Coca-Cola (KO)</option>
                         <option value="NASDAQ:PEP">PepsiCo (PEP)</option>
                         <option value="NASDAQ:INTC">Intel (INTC)</option>
                         <option value="NASDAQ:CSCO">Cisco (CSCO)</option>
                         <option value="NASDAQ:WMT">Walmart (WMT)</option>
-                        <option value="NASDAQ:WMT">ExxonMobil (XOM)</option>
+                        <option value="NYSE:XOM">ExxonMobil (XOM)</option>
                         <option value="NYSE:CVX">Chevron (CVX)</option>
                         <option value="NYSE:DIS">Disney (DIS)</option>
                         <option value="NYSE:NKE">Nike (NKE)</option>
@@ -246,22 +247,23 @@ Mon compte </button>
                         <option value="NASDAQ:HON">Honeywell (HON)</option>
                         <option value="NYSE:LMT">Lockheed Martin (LMT)</option>
                         <option value="NASDAQ:SBUX">Starbucks (SBUX)</option>
-                        <option value="NASDAQ:GESLX">General Electric (GE)</option>
+                        <option value="NYSE:GE">General Electric (GE)</option>
                         <option value="NYSE:IBM">IBM (IBM)</option>
-                        <option value="EURONEXT:SHELL">Shell (SHEL)</option>
+                        <option value="NYSE:SHEL">Shell (SHEL)</option>
                         <option value="NYSE:BP">BP (BP)</option>
-                        <option value="EURONEXT:TTE">TotalEnergies (TTE)</option>
-                        <option value="NSE:SIEMENS">Siemens (SIEGY)</option>
-                        <option value="XETR:SAP">SAP (SAP)</option>
-                        <option value="BET:VOLKSWAGEN">Volkswagen (VWAGY)</option>
+                        <option value="NYSE:TTE">TotalEnergies (TTE)</option>
+                        <option value="OTC:SIEGY">Siemens (SIEGY)</option>
+                        <option value="NYSE:SAP">SAP (SAP)</option>
+                        <option value="OTC:VWAGY">Volkswagen (VWAGY)</option>
                         <option value="BSE:BMW">BMW (BMWYY)</option>
-                        <option value="TSE:7203">Toyota (TM)</option>
-                        <option value="TSE:6758">Sony (SONY)</option>
-                        <option value="KRX:005930">Samsung Electronics (SSNLF)</option>
+                        <option value="NYSE:TM">Toyota (TM)</option>
+                        <option value="NYSE:SONY">Sony (SONY)</option>
+                        <option value="OTC:SSNLF">Samsung Electronics (SSNLF)</option>
                         <option value="NYSE:BABA">Alibaba (BABA)</option>
                         <option value="OTC:TCEHY">Tencent (TCEHY)</option>
                         <option value="NASDAQ:PYPL">PayPal (PYPL)</option>
                       </optgroup>
+
                       <optgroup label="Forex">
                         <option value="FX_IDC:EURUSD">USD/EUR</option>
                         <option value="FX_IDC:USDJPY">USD/JPY</option>
@@ -274,41 +276,43 @@ Mon compte </button>
                         <option value="FX_IDC:EURJPY">EUR/JPY</option>
                         <option value="FX_IDC:GBPJPY">GBP/JPY</option>
                       </optgroup>
+
                       <optgroup label="Indices">
-                        <option value="SP:SPX">S&amp;P 500</option>
+                        <option value="FOREXCOM:SPXUSD">S&amp;P 500</option>
                         <option value="FOREXCOM:DJI">Dow Jones Industrial Average (DJIA)</option>
-                        <option value="NASDAQ:NDX">Nasdaq 100</option>
-                        <option value="FTSE:UKX">FTSE 100</option>
-                        <option value="TASE:HRL.F28">DAX 30</option>
-                        <option value="TVC:CAC40">CAC 40</option>
-                        <option value="SGX:NK1!">Nikkei 225</option>
-                        <option value="HKEX:HSI1!">Hang Seng</option>
-                        <option value="SSE:000888">Shanghai Composite</option>
-                        <option value="CBOEFTSE:RUT">Russell 2000</option>
+                        <option value="FOREXCOM:NSXUSD">Nasdaq 100</option>
+                        <option value="FOREXCOM:UKXGBP">FTSE 100</option>
+                        <option value="INDEX:DEU40">DAX 30</option>
+                        <option value="INDEX:CAC40">CAC 40</option>
+                        <option value="INDEX:NKY">Nikkei 225</option>
+                        <option value="INDEX:HSI">Hang Seng</option>
+                        <option value="SSE:000001">Shanghai Composite</option>
+                        <option value="FOREXCOM:US2000">Russell 2000</option>
                       </optgroup>
+
                       <optgroup label="Commodities">
-                        <option value="OANDA:XAUUSD">Gold/USD</option>
-                        <option value="CMCMARKETS:XAGUSD">Silver/USD</option>
-                        <option value="CMCMARKETS:SILVER1!">Platinum/USD</option>
-                        <option value="FPMARKETS:XCUUSD">Copper/USD</option>
-                        <option value="BLACKBULL:WTI">Crude Oil – WTI/USD</option>
-                        <option value="BLACKBULL:BRENT">Crude Oil – Brent/USD</option>
-                        <option value="FX_IDC:USDNTG">Natural Gas/USD</option>
-                        <option value="NASDAQ:HX601010GI">Coal/USD</option>
-                        <option value="FPMARKETS:XALUSD">Aluminum/USD</option>
-                        <option value="FPMARKETS:XNIUSD">Nickel/USD</option>
-                        <option value="FPMARKETS:XZNUSD">Zinc/USD</option>
-                        <option value="FPMARKETS:XPBUSD">Lead/USD</option>
-                        <option value="COMEX:PAU1!">Iron Ore/USD</option>
+                        <option value="CMCMARKETS:GOLD">Gold/USD</option>
+                        <option value="CMCMARKETS:SILVER">Silver/USD</option>
+                        <option value="CMCMARKETS:PLATINUM">Platinum/USD</option>
+                        <option value="CMCMARKETS:COPPER">Copper/USD</option>
+                        <option value="TVC:USOIL">Crude Oil – WTI/USD</option>
+                        <option value="TVC:UKOIL">Crude Oil – Brent/USD</option>
+                        <option value="SKILLING:NATGAS">Natural Gas/USD</option>
+                        <option value="AMEX:COAL">Coal/USD</option>
+                        <option value="FUSIONMARKETS:XALUSD">Aluminum/USD</option>
+                        <option value="EIGHTCAP:XNIUSD">Nickel/USD</option>
+                        <option value="FUSIONMARKETS:XZNUSD">Zinc/USD</option>
+                        <option value="FUSIONMARKETS:XPBUSD">Lead/USD</option>
+                        <option value="CAPITALCOM:TSI">Iron Ore/USD</option>
                         <option value="SKILLING:WHEAT">Wheat/USD</option>
                         <option value="SKILLING:CORN">Corn/USD</option>
-                        <option value="FUSIONMARKETS:SOYBEAN">Soybeans/USD</option>
+                        <option value="SKILLING:SOYBEAN">Soybeans/USD</option>
                         <option value="SKILLING:COFFEE">Coffee/USD</option>
                         <option value="SKILLING:COCOA">Cocoa/USD</option>
                         <option value="SKILLING:SUGAR">Sugar/USD</option>
                         <option value="SKILLING:COTTON">Cotton/USD</option>
                       </optgroup>
-</select>
+                    </select>
                     <label class="form-label ms-3 me-2 mb-0" for="chartTheme">Thème :</label>
                     <select class="form-select form-select-sm" id="chartTheme" style="width: auto;">
                       <option value="light">Clair</option>
