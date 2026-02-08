@@ -121,10 +121,6 @@ function marketPairCandidateNames(string $pair): array {
     return array_values(array_unique($candidates));
 }
 
-function normalizeMarketRowName(string $name): string {
-    return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($name))) ?? '';
-}
-
 function normalizeCommodityPayload(string $pair, array $upstream, bool $isStale = false): array {
     $value = parseNumericValue($upstream['Value'] ?? ($upstream['value'] ?? null));
     $changePercent = parseNumericValue($upstream['Chg%'] ?? ($upstream['changePercent'] ?? null));
@@ -169,38 +165,10 @@ function fetchCommodityUpstream(string $pair): array {
     $targetNames = marketPairCandidateNames($pair);
     $rows = $quotesPayload['rows'] ?? [];
 
-    $exactRowsByName = [];
-    $normalizedRowsByName = [];
-
-    foreach ($rows as $row) {
-        if (!is_array($row)) {
-            continue;
-        }
-
-        $name = strtoupper(trim((string)($row['Name'] ?? '')));
-        if ($name === '') {
-            continue;
-        }
-
-        if (!isset($exactRowsByName[$name])) {
-            $exactRowsByName[$name] = $row;
-        }
-
-        $normalizedName = normalizeMarketRowName($name);
-        if ($normalizedName !== '' && !isset($normalizedRowsByName[$normalizedName])) {
-            $normalizedRowsByName[$normalizedName] = $row;
-        }
-    }
-
     foreach ($targetNames as $candidate) {
-        $exactKey = strtoupper(trim($candidate));
-        if ($exactKey !== '' && isset($exactRowsByName[$exactKey])) {
-            return ['ok' => true, 'data' => $exactRowsByName[$exactKey], 'took_ms' => $quotesPayload['took_ms'] ?? null];
-        }
-
-        $normalizedKey = normalizeMarketRowName($candidate);
-        if ($normalizedKey !== '' && isset($normalizedRowsByName[$normalizedKey])) {
-            return ['ok' => true, 'data' => $normalizedRowsByName[$normalizedKey], 'took_ms' => $quotesPayload['took_ms'] ?? null];
+        $row = quotesClientFindRowByPairName($rows, $candidate);
+        if ($row !== null) {
+            return ['ok' => true, 'data' => $row, 'took_ms' => $quotesPayload['took_ms'] ?? null];
         }
     }
 

@@ -2,6 +2,85 @@
 
 const QUOTES_CLIENT_UPSTREAM_URL = 'http://171.22.114.97:8010/quotes';
 
+function quotesClientNormalizeRowName(string $name): string {
+    return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($name))) ?? '';
+}
+
+function quotesClientPairCandidateNames(string $pair): array {
+    $raw = strtoupper(trim(urldecode($pair)));
+    $raw = preg_replace('/\s+/', '', $raw) ?? '';
+    if ($raw === '') {
+        return [];
+    }
+
+    $candidates = [$raw];
+
+    if (strpos($raw, ':') !== false) {
+        [, $symbol] = array_pad(explode(':', $raw, 2), 2, '');
+        if ($symbol !== '') {
+            $raw = $symbol;
+            $candidates[] = $symbol;
+        }
+    }
+
+    if (strpos($raw, '/') !== false) {
+        [$base, $quote] = array_pad(explode('/', $raw, 2), 2, 'USD');
+        if ($base !== '') {
+            $quote = $quote === 'USDT' ? 'USD' : ($quote !== '' ? $quote : 'USD');
+            $candidates[] = $base . '/' . $quote;
+        }
+    } elseif (preg_match('/^([A-Z0-9._\-]+)(USDT|USD)$/', $raw, $m) && !empty($m[1])) {
+        $quote = $m[2] === 'USDT' ? 'USD' : $m[2];
+        $candidates[] = $m[1] . '/' . $quote;
+    }
+
+    return array_values(array_unique(array_filter(array_map('trim', $candidates))));
+}
+
+function quotesClientFindRowByPairName(array $rows, string $pair): ?array {
+    $targets = quotesClientPairCandidateNames($pair);
+    if (!$targets) {
+        return null;
+    }
+
+    $exact = [];
+    $normalized = [];
+
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $name = strtoupper(trim((string)($row['Name'] ?? '')));
+        if ($name === '') {
+            continue;
+        }
+
+        if (!isset($exact[$name])) {
+            $exact[$name] = $row;
+        }
+
+        $normalizedName = quotesClientNormalizeRowName($name);
+        if ($normalizedName !== '' && !isset($normalized[$normalizedName])) {
+            $normalized[$normalizedName] = $row;
+        }
+    }
+
+    foreach ($targets as $target) {
+        $exactKey = strtoupper(trim($target));
+        if ($exactKey !== '' && isset($exact[$exactKey])) {
+            return $exact[$exactKey];
+        }
+
+        $normalizedKey = quotesClientNormalizeRowName($target);
+        if ($normalizedKey !== '' && isset($normalized[$normalizedKey])) {
+            return $normalized[$normalizedKey];
+        }
+    }
+
+    return null;
+}
+
 function quotesClientFetchJson(string $url, int $timeoutSeconds = 6): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [

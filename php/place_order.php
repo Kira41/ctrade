@@ -20,13 +20,15 @@ try {
         echo json_encode(['status'=>'error','message'=>'Missing parameters']);
         exit;
     }
-    if(!preg_match('/^[A-Z]{2,10}\/[A-Z]{2,10}$/', strtoupper($pair))){
+    require_once __DIR__.'/../config/db_connection.php';
+    require_once __DIR__.'/../utils/helpers.php';
+
+    if(!getPairSnapshot((string)$pair, isset($input['market_symbol']) ? (string)$input['market_symbol'] : null)){
         http_response_code(400);
         echo json_encode(['status'=>'error','message'=>'Invalid pair']);
         exit;
     }
-    require_once __DIR__.'/../config/db_connection.php';
-    require_once __DIR__.'/../utils/helpers.php';
+
     $pdo=db();
 
     if($type==='limit'){
