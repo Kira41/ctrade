@@ -149,9 +149,10 @@ $profit = profit_loss_long($executedSellPrice, $avg, $soldQty);
 
 ## Historical prices
 
-The helper function `getHistoricalPrice()` fetches the closing price of a
-currency pair at a specific Unix timestamp from the public CryptoCompare API.
-Call this function from your PHP code to retrieve historical values:
+The helper function `getHistoricalPrice()` resolves pricing through the shared
+quotes client pipeline (`php/quotes_client.php`), which keeps all market-price
+lookups on the same upstream feed. The timestamp argument is kept for backward
+compatibility with older callers.
 
 ```php
 $price = getHistoricalPrice('BTC/USD', 1609459200);

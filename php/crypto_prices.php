@@ -2,18 +2,27 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$currency = isset($_GET['currency']) ? strtolower($_GET['currency']) : 'usd';
-$coins = ['bitcoin','ethereum','cardano','solana'];
-$url = 'https://api.coingecko.com/api/v3/simple/price?ids=' . implode(',', $coins) . '&vs_currencies=' . $currency;
+require_once __DIR__ . '/../utils/market_data_provider.php';
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-if ($response === false) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Unable to retrieve prices']);
+$currency = isset($_GET['currency']) ? strtolower((string)$_GET['currency']) : 'usd';
+if ($currency !== 'usd' && $currency !== 'usdt') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Only USD/USDT quote currency is supported']);
     exit;
 }
-curl_close($ch);
-echo $response;
+
+$coinMap = [
+    'bitcoin' => 'COINBASE:BTCUSD',
+    'ethereum' => 'COINBASE:ETHUSD',
+    'cardano' => 'COINBASE:ADAUSD',
+    'solana' => 'COINBASE:SOLUSD',
+];
+
+$result = [];
+foreach ($coinMap as $coin => $pair) {
+    $payload = getMarketData($pair, 2.0);
+    $price = parseNumericValue($payload['value'] ?? ($payload['market_last'] ?? null));
+    $result[$coin] = [$currency => $price ?? 0.0];
+}
+
+echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

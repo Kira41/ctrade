@@ -1,9 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db_connection.php';
-
-const COMMODITY_PROXY_UPSTREAM_HOST = '171.22.114.97';
-const COMMODITY_PROXY_UPSTREAM_PORT = 8000;
-const COMMODITY_PROXY_API_KEY = 'te_6XvQpK9jR2mN4sA7fH8uC1zL0wY3tG5eB9nD7kS2pV4qR8m';
+require_once __DIR__ . '/quotes_client_lib.php';
 
 function normalizeMarketPair(?string $rawPair): string {
     $decoded = urldecode((string)($rawPair ?? ''));
@@ -88,38 +85,33 @@ function parseNumericValue($val): ?float {
     return (float)$normalized;
 }
 
+function marketPairToRowName(string $pair): string {
+    $normalized = normalizeMarketPair($pair);
+    [$exchange, $symbol] = array_pad(explode(':', $normalized, 2), 2, '');
+    $symbol = strtoupper($symbol);
+
+    if (preg_match('/^([A-Z0-9\._\-]+)(USD|USDT)$/', $symbol, $m)) {
+        $quote = $m[2] === 'USDT' ? 'USD' : $m[2];
+        return $m[1] . '/' . $quote;
+    }
+
+    return str_replace(':', '/', $normalized);
+}
+
 function normalizeCommodityPayload(string $pair, array $upstream, bool $isStale = false): array {
-    $value = null;
-    foreach (['value', 'market_last', 'price', 'c', 'close', 'last', 'lp'] as $k) {
-        if (array_key_exists($k, $upstream)) {
-            $value = parseNumericValue($upstream[$k]);
-            if ($value !== null) {
-                break;
-            }
-        }
-    }
-
-    $changePercent = null;
-    foreach (['changePercent', 'market_daily_Pchg'] as $k) {
-        if (array_key_exists($k, $upstream)) {
-            $changePercent = parseNumericValue($upstream[$k]);
-            if ($changePercent !== null) {
-                break;
-            }
-        }
-    }
-
-    $change = parseNumericValue($upstream['change'] ?? null);
-    $open = parseNumericValue($upstream['open'] ?? null);
-    $high = parseNumericValue($upstream['high'] ?? null);
-    $low = parseNumericValue($upstream['low'] ?? null);
-    $previous = parseNumericValue($upstream['previous'] ?? null);
+    $value = parseNumericValue($upstream['Value'] ?? ($upstream['value'] ?? null));
+    $changePercent = parseNumericValue($upstream['Chg%'] ?? ($upstream['changePercent'] ?? null));
+    $change = parseNumericValue($upstream['Change'] ?? ($upstream['change'] ?? null));
+    $open = parseNumericValue($upstream['Open'] ?? ($upstream['open'] ?? null));
+    $high = parseNumericValue($upstream['High'] ?? ($upstream['high'] ?? null));
+    $low = parseNumericValue($upstream['Low'] ?? ($upstream['low'] ?? null));
+    $previous = parseNumericValue($upstream['Prev'] ?? ($upstream['previous'] ?? null));
 
     return [
         'ok' => true,
-        'source' => 'commodity_proxy',
+        'source' => 'quotes_client',
         'pair' => $pair,
-        'name' => $upstream['name'] ?? $pair,
+        'name' => $upstream['Name'] ?? ($upstream['name'] ?? $pair),
         'value' => $value,
         'change' => $change,
         'changePercent' => $changePercent,
@@ -137,43 +129,35 @@ function normalizeCommodityPayload(string $pair, array $upstream, bool $isStale 
 }
 
 function fetchCommodityUpstream(string $pair): array {
-    $url = 'http://' . COMMODITY_PROXY_UPSTREAM_HOST . ':' . COMMODITY_PROXY_UPSTREAM_PORT
-        . '/tv/quote?currencyPair=' . urlencode($pair);
-
-    $started = microtime(true);
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 25,
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTPHEADER => [
-            'X-API-Key: ' . COMMODITY_PROXY_API_KEY,
-            'Accept: application/json',
-            'User-Agent: CoinTrade-MarketDataProvider/1.0',
-        ],
-    ]);
-
-    $response = curl_exec($ch);
-    $curlErr = curl_error($ch);
-    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    $tookMs = (int)((microtime(true) - $started) * 1000);
-
-    if ($response === false) {
-        return ['ok' => false, 'error' => 'curl_error', 'detail' => $curlErr, 'took_ms' => $tookMs];
+    $quotesPayload = quotesClientFetchPayload();
+    if (empty($quotesPayload['ok'])) {
+        return [
+            'ok' => false,
+            'error' => 'quotes_client_failure',
+            'detail' => $quotesPayload,
+            'took_ms' => $quotesPayload['took_ms'] ?? null,
+        ];
     }
 
-    $data = json_decode($response, true);
-    if (!is_array($data)) {
-        return ['ok' => false, 'error' => 'invalid_json', 'http_code' => $httpCode, 'raw' => mb_substr((string)$response, 0, 500), 'took_ms' => $tookMs];
+    $targetName = marketPairToRowName($pair);
+    $rows = $quotesPayload['rows'] ?? [];
+
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $name = strtoupper(trim((string)($row['Name'] ?? '')));
+        if ($name === strtoupper($targetName)) {
+            return ['ok' => true, 'data' => $row, 'took_ms' => $quotesPayload['took_ms'] ?? null];
+        }
     }
 
-    if ($httpCode < 200 || $httpCode >= 300 || empty($data['ok'])) {
-        return ['ok' => false, 'error' => 'upstream_failure', 'http_code' => $httpCode, 'payload' => $data, 'took_ms' => $tookMs];
-    }
-
-    return ['ok' => true, 'data' => $data, 'took_ms' => $tookMs];
+    return [
+        'ok' => false,
+        'error' => 'pair_not_found',
+        'detail' => ['pair' => $pair, 'target_name' => $targetName],
+        'took_ms' => $quotesPayload['took_ms'] ?? null,
+    ];
 }
 
 function readCachedMarketData(PDO $pdo, string $pair): ?array {
@@ -199,7 +183,7 @@ function upsertMarketCache(PDO $pdo, string $pair, array $payload, bool $isStale
         'INSERT INTO market_data_cache
             (pair, source, payload, value, change_value, change_percent, open_value, high_value, low_value, previous_value, is_stale, updated_at, last_fetch_ms, last_error)
          VALUES
-            (?, "commodity_proxy", ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
+            (?, "quotes_client", ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
          ON DUPLICATE KEY UPDATE
             source = VALUES(source),
             payload = VALUES(payload),
@@ -310,7 +294,7 @@ function getMarketDataWithFileCache(string $pair, float $ttlSeconds): array {
             return $cacheAfterLock;
         }
 
-        return ['ok' => false, 'pair' => $pair, 'source' => 'commodity_proxy', 'is_stale' => true, 'error' => 'Unable to refresh market data and no cache available', 'detail' => $upstream];
+        return ['ok' => false, 'pair' => $pair, 'source' => 'quotes_client', 'is_stale' => true, 'error' => 'Unable to refresh market data and no cache available', 'detail' => $upstream];
     } finally {
         flock($lockFp, LOCK_UN);
         fclose($lockFp);
@@ -378,7 +362,7 @@ function getMarketData(string $inputPair, float $ttlSeconds = 2.0): array {
         return [
             'ok' => false,
             'pair' => $pair,
-            'source' => 'commodity_proxy',
+            'source' => 'quotes_client',
             'is_stale' => true,
             'error' => 'Unable to refresh market data and no cache available',
             'detail' => $upstream,

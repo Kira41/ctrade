@@ -30,24 +30,18 @@ function getLivePrice(string $pair, ?string $marketSymbol = null): float {
 }
 
 /**
- * Fetch the historical closing price for a currency pair from CryptoCompare.
- * The timestamp should be a Unix epoch (seconds).
- * Returns 0 on failure.
+ * Returns market price using the shared quotes client stream.
+ * The timestamp argument is preserved for backward compatibility.
  */
 function getHistoricalPrice(string $pair, int $timestamp): float {
-    [$base, $quote] = explode('/', strtoupper($pair));
-    // CryptoCompare expects USD rather than USDT
-    if ($quote === 'USDT') {
-        $quote = 'USD';
+    (void)$timestamp;
+
+    $pairUpper = strtoupper(trim($pair));
+    if (strpos($pairUpper, ':') === false) {
+        $pairUpper = normalizeMarketPair($pairUpper);
     }
-    $url = sprintf(
-        'https://min-api.cryptocompare.com/data/pricehistorical?fsym=%s&tsyms=%s&ts=%d',
-        urlencode($base), urlencode($quote), $timestamp
-    );
-    $json = @file_get_contents($url);
-    if ($json === false) return 0.0;
-    $data = json_decode($json, true);
-    return isset($data[$base][$quote]) ? (float)$data[$base][$quote] : 0.0;
+
+    return getMarketPrice($pairUpper, 2.0);
 }
 
 function addHistory(PDO $pdo, int $uid, string $opNum, string $pair, string $side,
