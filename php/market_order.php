@@ -63,6 +63,11 @@ try {
 
     $price = getLivePrice($pair, $marketSymbol);
     if ($price <= 0) {
+        // Fallback to the cached quote snapshot when upstream symbol lookup is
+        // temporarily unavailable for some assets.
+        $price = isset($pairSnapshot['value']) ? (float)$pairSnapshot['value'] : 0.0;
+    }
+    if ($price <= 0) {
         http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Failed to fetch price']);
         exit;

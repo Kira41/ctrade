@@ -1926,7 +1926,16 @@ function initializeUI() {
         const apiPair = pairText.includes('/') ? pairText : pairText.replace(/(USDT|USD)$/, '/$1');
         let resp;
         const serverOrderType = orderType === 'stoplimit' ? 'stop_limit' : orderType;
-        const payload = { user_id: userId, pair: apiPair, market_symbol: pairVal, quantity: amount, side: isBuy ? 'buy' : 'sell', type: serverOrderType };
+        const payload = {
+            user_id: userId,
+            pair: apiPair,
+            // Use the full TradingView symbol when available so backend price
+            // lookups work for non-crypto assets as well.
+            market_symbol: getSelectedTVSymbol(pairVal) || pairVal,
+            quantity: amount,
+            side: isBuy ? 'buy' : 'sell',
+            type: serverOrderType
+        };
 
         if (orderType === 'limit' || orderType === 'stoplimit' || orderType === 'oco') {
             const limitPrice = parseFloat($('#limitPrice').val());
@@ -2048,7 +2057,11 @@ function initializeUI() {
             await apiFetch('php/cancel_order.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, order_id: orderId })
+                body: JSON.stringify({
+                    user_id: userId,
+                    order_id: orderId,
+                    operation_number: String(op || '')
+                })
             });
             showBootstrapAlert('cancelOrderAlert', 'Ordre complété.', 'success');
             await fetchDashboardData();
