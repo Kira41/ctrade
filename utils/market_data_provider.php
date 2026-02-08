@@ -98,6 +98,33 @@ function marketPairToRowName(string $pair): string {
     return str_replace(':', '/', $normalized);
 }
 
+function marketPairCandidateNames(string $pair): array {
+    $normalized = normalizeMarketPair($pair);
+    $primary = marketPairToRowName($normalized);
+
+    $aliasesByPair = [
+        'FOREXCOM:DJI' => ['US 30', 'US30', 'DOW JONES 30', 'DOW JONES', 'WALL STREET'],
+        'FOREXCOM:SPXUSD' => ['US 500', 'US500', 'S&P 500', 'SPX 500'],
+        'FOREXCOM:NSXUSD' => ['US TECH 100', 'US-TECH 100', 'NASDAQ 100', 'NAS 100'],
+        'FOREXCOM:UKXGBP' => ['UK 100', 'UK100', 'FTSE 100'],
+        'FOREXCOM:US2000' => ['US SMALL CAP 2000', 'US SMALLCAP 2000', 'RUSSELL 2000'],
+    ];
+
+    $candidates = [$primary];
+    foreach ($aliasesByPair[$normalized] ?? [] as $alias) {
+        $clean = trim((string)$alias);
+        if ($clean !== '') {
+            $candidates[] = $clean;
+        }
+    }
+
+    return array_values(array_unique($candidates));
+}
+
+function normalizeMarketRowName(string $name): string {
+    return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($name))) ?? '';
+}
+
 function normalizeCommodityPayload(string $pair, array $upstream, bool $isStale = false): array {
     $value = parseNumericValue($upstream['Value'] ?? ($upstream['value'] ?? null));
     $changePercent = parseNumericValue($upstream['Chg%'] ?? ($upstream['changePercent'] ?? null));
@@ -139,23 +166,48 @@ function fetchCommodityUpstream(string $pair): array {
         ];
     }
 
-    $targetName = marketPairToRowName($pair);
+    $targetNames = marketPairCandidateNames($pair);
     $rows = $quotesPayload['rows'] ?? [];
+
+    $exactRowsByName = [];
+    $normalizedRowsByName = [];
 
     foreach ($rows as $row) {
         if (!is_array($row)) {
             continue;
         }
+
         $name = strtoupper(trim((string)($row['Name'] ?? '')));
-        if ($name === strtoupper($targetName)) {
-            return ['ok' => true, 'data' => $row, 'took_ms' => $quotesPayload['took_ms'] ?? null];
+        if ($name === '') {
+            continue;
+        }
+
+        if (!isset($exactRowsByName[$name])) {
+            $exactRowsByName[$name] = $row;
+        }
+
+        $normalizedName = normalizeMarketRowName($name);
+        if ($normalizedName !== '' && !isset($normalizedRowsByName[$normalizedName])) {
+            $normalizedRowsByName[$normalizedName] = $row;
+        }
+    }
+
+    foreach ($targetNames as $candidate) {
+        $exactKey = strtoupper(trim($candidate));
+        if ($exactKey !== '' && isset($exactRowsByName[$exactKey])) {
+            return ['ok' => true, 'data' => $exactRowsByName[$exactKey], 'took_ms' => $quotesPayload['took_ms'] ?? null];
+        }
+
+        $normalizedKey = normalizeMarketRowName($candidate);
+        if ($normalizedKey !== '' && isset($normalizedRowsByName[$normalizedKey])) {
+            return ['ok' => true, 'data' => $normalizedRowsByName[$normalizedKey], 'took_ms' => $quotesPayload['took_ms'] ?? null];
         }
     }
 
     return [
         'ok' => false,
         'error' => 'pair_not_found',
-        'detail' => ['pair' => $pair, 'target_name' => $targetName],
+        'detail' => ['pair' => $pair, 'target_name' => $targetNames[0] ?? null, 'target_candidates' => $targetNames],
         'took_ms' => $quotesPayload['took_ms'] ?? null,
     ];
 }
