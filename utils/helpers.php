@@ -34,8 +34,6 @@ function getLivePrice(string $pair, ?string $marketSymbol = null): float {
  * The timestamp argument is preserved for backward compatibility.
  */
 function getHistoricalPrice(string $pair, int $timestamp): float {
-    (void)$timestamp;
-
     $pairUpper = strtoupper(trim($pair));
     if (strpos($pairUpper, ':') === false) {
         $pairUpper = normalizeMarketPair($pairUpper);
