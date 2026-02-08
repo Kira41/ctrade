@@ -154,10 +154,19 @@ function executeTrade(PDO $pdo, array $order, float $price, bool $closePositions
     // BUY orders either open a long position or close an existing short
     if ($order['side'] === 'buy') {
         if ($closePositions) {
-            // First check for open short positions to close
-            $stOpen = $pdo->prepare('SELECT id,price,quantity,profit_loss FROM trades WHERE user_id=? AND pair=? AND side="sell" AND status="open" ORDER BY id ASC LIMIT 1');
-            $stOpen->execute([$order['user_id'],$order['pair']]);
-            $open = $stOpen->fetch(PDO::FETCH_ASSOC);
+            // First check for open short positions to close.
+            // Compare pair values with a normalized form so legacy values like
+            // `COINBASE:BTCUSD`, `BTC/USD` and `BTCUSDT` all match the same market.
+            $stOpen = $pdo->prepare('SELECT id,pair,price,quantity,profit_loss FROM trades WHERE user_id=? AND side="sell" AND status="open" ORDER BY id ASC');
+            $stOpen->execute([$order['user_id']]);
+            $open = null;
+            $targetPair = normalizeTradePair((string)$order['pair']);
+            while ($row = $stOpen->fetch(PDO::FETCH_ASSOC)) {
+                if (normalizeTradePair((string)$row['pair']) === $targetPair) {
+                    $open = $row;
+                    break;
+                }
+            }
             if ($open) {
                 $closeQty   = min($order['quantity'], $open['quantity']);
                 $deposit    = $open['price'] * $closeQty;
@@ -207,9 +216,16 @@ function executeTrade(PDO $pdo, array $order, float $price, bool $closePositions
 
     // SELL orders either close a long position or open a new short
     if ($closePositions) {
-        $stOpen = $pdo->prepare('SELECT id,price,quantity,side,profit_loss FROM trades WHERE user_id=? AND pair=? AND status="open" ORDER BY id ASC LIMIT 1');
-        $stOpen->execute([$order['user_id'],$order['pair']]);
-        $open = $stOpen->fetch(PDO::FETCH_ASSOC);
+        $stOpen = $pdo->prepare('SELECT id,pair,price,quantity,side,profit_loss FROM trades WHERE user_id=? AND status="open" ORDER BY id ASC');
+        $stOpen->execute([$order['user_id']]);
+        $open = null;
+        $targetPair = normalizeTradePair((string)$order['pair']);
+        while ($row = $stOpen->fetch(PDO::FETCH_ASSOC)) {
+            if (normalizeTradePair((string)$row['pair']) === $targetPair) {
+                $open = $row;
+                break;
+            }
+        }
 
         if ($open && $open['side'] === 'buy') {
             // Closing a long position
@@ -254,5 +270,23 @@ function executeTrade(PDO $pdo, array $order, float $price, bool $closePositions
     $opNum = 'T'.$tradeId;
     addHistory($pdo,$order['user_id'],$opNum,$order['pair'],'sell',$order['quantity'],$price,'En cours');
     return ['ok'=>true,'balance'=>$bal,'price'=>$price,'profit'=>0,'operation'=>$opNum,'opened'=>true];
+}
+
+function normalizeTradePair(string $pair): string {
+    $pair = strtoupper(trim($pair));
+    if ($pair === '') return '';
+
+    if (strpos($pair, ':') !== false) {
+        [, $pair] = array_pad(explode(':', $pair, 2), 2, '');
+    }
+
+    $pair = str_replace(['-', '_', ' '], '', $pair);
+    $pair = str_replace('/', '', $pair);
+
+    if (str_ends_with($pair, 'USDT')) {
+        $pair = substr($pair, 0, -4) . 'USD';
+    }
+
+    return $pair;
 }
 ?>
