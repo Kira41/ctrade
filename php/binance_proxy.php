@@ -19,7 +19,7 @@ if ($mode === 'price') {
     echo json_encode([
         'symbol' => $symbol,
         'price' => (string)($data['value'] ?? 0),
-        'source' => 'commodity_proxy',
+        'source' => 'quotes_client',
         'is_stale' => !empty($data['is_stale']),
     ], JSON_UNESCAPED_UNICODE);
     exit;
@@ -34,6 +34,6 @@ echo json_encode([
     'highPrice' => (string)($data['high'] ?? 0),
     'lowPrice' => (string)($data['low'] ?? 0),
     'prevClosePrice' => (string)($data['previous'] ?? 0),
-    'source' => 'commodity_proxy',
+    'source' => 'quotes_client',
     'is_stale' => !empty($data['is_stale']),
 ], JSON_UNESCAPED_UNICODE);
