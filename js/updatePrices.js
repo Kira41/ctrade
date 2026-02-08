@@ -118,6 +118,7 @@ function parseMarketNumber(value) {
     let text = String(value ?? '')
         .trim()
         .replace(/[−–]/g, '-')
+        .replace(/[<>~≈]/g, '')
         .replace(/[%\s\$€£¥]/g, '');
 
     if (!text) return NaN;
@@ -153,11 +154,21 @@ function normalizePairName(value) {
     return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function pairCandidates(pair) {
-    const raw = String(pair || '').trim().toUpperCase();
-    if (!raw) return [];
+const QUOTE_ALIASES = {
+    SPXUSD: ['S&P 500', 'SPX 500', 'US 500', 'US500'],
+    DJI: ['DOW JONES 30', 'DOW JONES', 'US 30', 'US30', 'WALL STREET'],
+    NSXUSD: ['NASDAQ 100', 'US TECH 100', 'US-TECH 100', 'NAS 100'],
+    UKXGBP: ['FTSE 100', 'UK 100', 'UK100'],
+    US2000: ['RUSSELL 2000', 'US SMALL CAP 2000', 'US SMALLCAP 2000']
+};
 
-    const candidates = new Set([raw]);
+function pairCandidates(pair, label = '') {
+    const raw = String(pair || '').trim().toUpperCase();
+    const labelText = String(label || '').trim().toUpperCase();
+    if (!raw && !labelText) return [];
+
+    const candidates = new Set();
+    if (raw) candidates.add(raw);
     const noExchange = raw.includes(':') ? raw.split(':', 2)[1] : raw;
     if (noExchange) candidates.add(noExchange);
 
@@ -170,13 +181,39 @@ function pairCandidates(pair) {
         if (m && m[1]) {
             const quote = m[2] === 'USDT' ? 'USD' : m[2];
             candidates.add(`${m[1]}/${quote}`);
+        } else if (noExchange) {
+            // Some upstream feeds expose CRYPTOCAP symbols as BASE/USD.
+            candidates.add(`${noExchange}/USD`);
         }
+    }
+
+    if (labelText) {
+        const compactLabel = labelText.replace(/\s+/g, ' ').trim();
+        if (compactLabel) candidates.add(compactLabel);
+
+        const slashLabel = compactLabel.match(/^([A-Z0-9._-]+)\s*\/\s*([A-Z0-9._-]+)$/);
+        if (slashLabel) {
+            const base = slashLabel[1];
+            const quote = slashLabel[2];
+            candidates.add(`${base}/${quote}`);
+            candidates.add(`${quote}/${base}`);
+        }
+
+        const tickerMatch = compactLabel.match(/\(([A-Z0-9._-]+)\)\s*$/);
+        if (tickerMatch && tickerMatch[1]) {
+            candidates.add(tickerMatch[1]);
+        }
+    }
+
+    if (raw.includes(':')) {
+        const symbol = raw.split(':', 2)[1] || '';
+        (QUOTE_ALIASES[symbol] || []).forEach(alias => candidates.add(alias.toUpperCase()));
     }
 
     return Array.from(candidates);
 }
 
-function findQuoteRow(rows, pair) {
+function findQuoteRow(rows, pair, label = '') {
     if (!Array.isArray(rows) || !rows.length) return null;
 
     const exact = new Map();
@@ -188,9 +225,17 @@ function findQuoteRow(rows, pair) {
         if (!exact.has(name)) exact.set(name, row);
         const key = normalizePairName(name);
         if (key && !normalized.has(key)) normalized.set(key, row);
+
+        const tickerMatch = name.match(/\(([A-Z0-9._-]+)\)\s*$/);
+        if (tickerMatch && tickerMatch[1]) {
+            const ticker = tickerMatch[1];
+            if (!exact.has(ticker)) exact.set(ticker, row);
+            const tickerKey = normalizePairName(ticker);
+            if (tickerKey && !normalized.has(tickerKey)) normalized.set(tickerKey, row);
+        }
     }
 
-    for (const candidate of pairCandidates(pair)) {
+    for (const candidate of pairCandidates(pair, label)) {
         const exactKey = String(candidate).trim().toUpperCase();
         if (exact.has(exactKey)) return exact.get(exactKey);
         const normalizedKey = normalizePairName(candidate);
@@ -1658,7 +1703,7 @@ function initializeUI() {
             .then(r => r.json())
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
-                const row = findQuoteRow(info.rows || [], fetchFor);
+                const row = findQuoteRow(info.rows || [], fetchFor, selectedPairText);
                 if (!row) throw new Error('Pair not found');
                 currentPrice = parseMarketNumber(row.Value);
                 priceChange = parseMarketNumber(row['Chg%']);
@@ -1681,7 +1726,7 @@ function initializeUI() {
         try {
             const resp = await fetch('php/quotes_client.php');
             const info = await resp.json();
-            const row = findQuoteRow(info.rows || [], pair);
+            const row = findQuoteRow(info.rows || [], pair, pair);
             return row ? parseMarketNumber(row.Value) : NaN;
         } catch (e) {
             return NaN;
