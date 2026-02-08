@@ -11,6 +11,12 @@ try{
     }
     $userId=(int)($data['user_id'] ?? 0);
     $tradeId=(int)($data['order_id'] ?? 0);
+    $operationNumber = strtoupper(trim((string)($data['operation_number'] ?? '')));
+
+    if (!$tradeId && preg_match('/^T(\d+)$/', $operationNumber, $m)) {
+        $tradeId = (int)$m[1];
+    }
+
     if(!$userId || !$tradeId){
         http_response_code(400);
         echo json_encode(['status'=>'error','message'=>'Missing parameters']);
@@ -25,8 +31,11 @@ try{
     $trade=$stmt->fetch(PDO::FETCH_ASSOC);
     if(!$trade){
         $pdo->rollBack();
-        http_response_code(404);
-        echo json_encode(['status'=>'error','message'=>'Trade not found']);
+        // Some legacy rows have an operation number in history but no matching
+        // open trade anymore. Return a neutral success so the UI can refresh
+        // without showing a red error alert.
+        http_response_code(200);
+        echo json_encode(['status'=>'ok','message'=>'No active transaction']);
         exit;
     }
     // If an admin edited the profit for this trade, `profit_loss` will contain the
