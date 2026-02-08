@@ -45,6 +45,7 @@ function quotesClientFindRowByPairName(array $rows, string $pair): ?array {
 
     $exact = [];
     $normalized = [];
+    $tickerOnly = [];
 
     foreach ($rows as $row) {
         if (!is_array($row)) {
@@ -64,6 +65,17 @@ function quotesClientFindRowByPairName(array $rows, string $pair): ?array {
         if ($normalizedName !== '' && !isset($normalized[$normalizedName])) {
             $normalized[$normalizedName] = $row;
         }
+
+        if (preg_match('/\(([A-Z0-9.\-_]+)\)\s*$/', $name, $m) && !empty($m[1])) {
+            $ticker = strtoupper(trim($m[1]));
+            if (!isset($tickerOnly[$ticker])) {
+                $tickerOnly[$ticker] = $row;
+            }
+            $tickerNormalized = quotesClientNormalizeRowName($ticker);
+            if ($tickerNormalized !== '' && !isset($normalized[$tickerNormalized])) {
+                $normalized[$tickerNormalized] = $row;
+            }
+        }
     }
 
     foreach ($targets as $target) {
@@ -75,6 +87,10 @@ function quotesClientFindRowByPairName(array $rows, string $pair): ?array {
         $normalizedKey = quotesClientNormalizeRowName($target);
         if ($normalizedKey !== '' && isset($normalized[$normalizedKey])) {
             return $normalized[$normalizedKey];
+        }
+
+        if ($exactKey !== '' && isset($tickerOnly[$exactKey])) {
+            return $tickerOnly[$exactKey];
         }
     }
 

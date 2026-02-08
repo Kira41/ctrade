@@ -78,11 +78,21 @@ function parseNumericValue($val): ?float {
         return null;
     }
 
-    $normalized = trim(str_replace([',', '%', ' '], '', $val));
+    $text = trim(str_replace(["\u{2212}", "\u{2013}", "\u{2014}"], '-', $val));
+    $text = str_replace(["\u{00A0}", "\u{202F}"], ' ', $text);
+
+    $multiplier = 1.0;
+    if (preg_match('/([KMB])\s*$/i', $text, $suffixMatch)) {
+        $suffix = strtoupper($suffixMatch[1]);
+        $multiplier = $suffix === 'B' ? 1000000000.0 : ($suffix === 'M' ? 1000000.0 : 1000.0);
+        $text = preg_replace('/([KMB])\s*$/i', '', $text) ?? $text;
+    }
+
+    $normalized = trim(str_replace([',', '%', ' '], '', $text));
     if ($normalized === '' || !is_numeric($normalized)) {
         return null;
     }
-    return (float)$normalized;
+    return (float)$normalized * $multiplier;
 }
 
 function marketPairToRowName(string $pair): string {
