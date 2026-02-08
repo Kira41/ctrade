@@ -1669,7 +1669,7 @@ function initializeUI() {
                         <td>${formatCryptoFixed(trade.montant)} ${escapeHtml((trade.paireDevises||'').split('/')[0])}</td>
                         <td>${formatDollar(trade.prix)}</td>
                         <td><span class="badge ${escapeHtml(trade.statutClass)}">${escapeHtml(trade.statut)}</span></td>
-                        <td class="${escapeHtml(profitCls)}" data-profit${fixedAttr}>${profitText}</td>
+                        <td class="${escapeHtml(profitCls)}" data-profit="1"${fixedAttr}>${profitText}</td>
                         <td>${trade.statut==='En cours'?`<button class="btn btn-sm btn-danger cancel-order-btn" data-op="${escapeHtml(trade.operationNumber)}" title="Annuler"><i class="fas fa-ban"></i></button>`:'-'}</td>
                     </tr>`);
             });
@@ -1756,7 +1756,8 @@ function initializeUI() {
                 profit = (entry - curPrice) * qty;
             }
             const cls = profit >= 0 ? 'text-success' : 'text-danger';
-            const $row = $(`#tradingHistory tr[data-op="${escapeHtml(t.operationNumber)}"]`);
+            const op = String(t.operationNumber || '').replace(/"/g, '\\"');
+            const $row = $(`#tradingHistory tr[data-op="${op}"]`);
             const $cell = $row.find('[data-profit]');
             if ($cell.is('[data-profit-fixed]')) return;
             $cell
@@ -1805,7 +1806,8 @@ function initializeUI() {
             trade.prix = price;
             trade.profitClass = cls;
         }
-        const $row = $(`#tradingHistory tr[data-op="${escapeHtml(op)}"]`);
+        const opSelector = op.replace(/"/g, '\\"');
+        const $row = $(`#tradingHistory tr[data-op="${opSelector}"]`);
         if ($row.length) {
             $row.find('td').eq(5).text(formatDollar(price));
             $row.find('[data-profit]')
