@@ -284,7 +284,7 @@ function renderTradingViewWidget(theme) {
             <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
             <div class="tradingview-widget-copyright">
                 <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                    <span class="blue-text">Track all markets on TradingView</span>
+                    <span class="blue-text" hidden>Track all markets on TradingView</span>
                 </a>
             </div>
         </div>`;
