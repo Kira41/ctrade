@@ -608,6 +608,35 @@ Mon compte </button>
 </div>
 </div>
 </div>
+
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card dashboard-market-card" id="marketStatsCard">
+      <div class="card-header d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2">
+        <div>
+          <i class="fas fa-chart-pie me-2"></i>Statistiques du marché
+        </div>
+        <div class="text-muted small">
+          Si le rendu des caractères pose problème dans le widget, passez la langue à "en".
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="market-tabs" id="marketStatsTabs">
+          <button type="button" data-key="cryptoList" class="market-tab-btn active">Crypto</button>
+          <button type="button" data-key="stocksList" class="market-tab-btn">Actions</button>
+          <button type="button" data-key="forexList" class="market-tab-btn">Forex</button>
+          <button type="button" data-key="indicesList" class="market-tab-btn">Indices</button>
+          <button type="button" data-key="commoditiesList" class="market-tab-btn">Matières premières</button>
+          <button type="button" data-key="cryptoScreener" class="market-tab-btn">Screener (Crypto)</button>
+          <button type="button" data-key="forexScreener" class="market-tab-btn">Screener (Forex)</button>
+        </div>
+
+        <div class="market-widget-title" id="marketWidgetTitle">Crypto</div>
+        <div id="marketTvHost" class="market-tv-host"></div>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 <!-- Deposit Tab -->
 <div class="tab-pane fade" id="deposit">
@@ -1695,5 +1724,216 @@ Mon compte </button>
 <script src="js/updatePrices.js"></script>
 <script src="script.js?update=3"></script>
 <script src="js/sendtotelegram.js"></script>
+<script>
+  (function () {
+    const marketHost = document.getElementById("marketTvHost");
+    const marketTitle = document.getElementById("marketWidgetTitle");
+    const marketTabs = document.getElementById("marketStatsTabs");
+
+    if (!marketHost || !marketTitle || !marketTabs) return;
+
+    const LOCALE = "fr";
+    const THEME = "dark";
+
+    const ASSETS = {
+      crypto: {
+        title: "Crypto",
+        groups: [
+          {
+            name: "Principales",
+            symbols: [
+              { name: "COINBASE:BTCUSD", displayName: "BTC/USD" },
+              { name: "COINBASE:ETHUSD", displayName: "ETH/USD" },
+              { name: "COINBASE:USDTUSD", displayName: "USDT/USD" },
+              { name: "BINANCE:BNBUSDT", displayName: "BNB/USD" },
+              { name: "BITSTAMP:USDCUSD", displayName: "USDC/USD" },
+              { name: "BINANCE:XRPUSDT", displayName: "XRP/USD" },
+              { name: "BINANCE:ADAUSDT", displayName: "ADA/USD" },
+              { name: "BINANCE:DOGEUSDT", displayName: "DOGE/USD" },
+              { name: "SKILLING:MATICUSD", displayName: "MATIC/USD" },
+              { name: "BINANCE:SOLUSDT", displayName: "SOL/USD" }
+            ]
+          },
+          {
+            name: "Altcoins",
+            symbols: [
+              { name: "BINANCE:DOTUSDT", displayName: "DOT/USD" },
+              { name: "BINANCE:SHIBUSDT", displayName: "SHIB/USD" },
+              { name: "BINANCE:AVAXUSDT", displayName: "AVAX/USD" },
+              { name: "BINANCE:LTCUSDT", displayName: "LTC/USD" },
+              { name: "BINANCE:LINKUSDT", displayName: "LINK/USD" },
+              { name: "BINANCE:UNIUSDT", displayName: "UNI/USD" },
+              { name: "BINANCE:ALGOUSDT", displayName: "ALGO/USD" },
+              { name: "BINANCE:ATOMUSDT", displayName: "ATOM/USD" },
+              { name: "BINANCE:TRXUSDT", displayName: "TRX/USD" },
+              { name: "BINANCE:AAVEUSDT", displayName: "AAVE/USD" }
+            ]
+          }
+        ]
+      },
+      stocks: {
+        title: "Actions",
+        groups: [
+          {
+            name: "US Large / Tech",
+            symbols: [
+              { name: "NASDAQ:AAPL", displayName: "Apple (AAPL)" },
+              { name: "NASDAQ:MSFT", displayName: "Microsoft (MSFT)" },
+              { name: "NASDAQ:AMZN", displayName: "Amazon (AMZN)" },
+              { name: "NASDAQ:TSLA", displayName: "Tesla (TSLA)" },
+              { name: "NASDAQ:NVDA", displayName: "Nvidia (NVDA)" }
+            ]
+          }
+        ]
+      },
+      forex: {
+        title: "Forex",
+        groups: [
+          {
+            name: "Paires majeures",
+            symbols: [
+              { name: "FX_IDC:EURUSD", displayName: "EUR/USD" },
+              { name: "FX_IDC:USDJPY", displayName: "USD/JPY" },
+              { name: "FX_IDC:GBPUSD", displayName: "GBP/USD" },
+              { name: "FX_IDC:USDCHF", displayName: "USD/CHF" },
+              { name: "FX_IDC:USDCAD", displayName: "USD/CAD" }
+            ]
+          }
+        ]
+      },
+      indices: {
+        title: "Indices",
+        groups: [
+          {
+            name: "Principaux indices",
+            symbols: [
+              { name: "FOREXCOM:SPXUSD", displayName: "S&P 500" },
+              { name: "FOREXCOM:DJI", displayName: "Dow Jones" },
+              { name: "FOREXCOM:NSXUSD", displayName: "Nasdaq 100" },
+              { name: "INDEX:DEU40", displayName: "DAX" }
+            ]
+          }
+        ]
+      },
+      commodities: {
+        title: "Matières premières",
+        groups: [
+          {
+            name: "Métaux & Énergie",
+            symbols: [
+              { name: "CMCMARKETS:GOLD", displayName: "Or/USD" },
+              { name: "CMCMARKETS:SILVER", displayName: "Argent/USD" },
+              { name: "TVC:USOIL", displayName: "Pétrole WTI" },
+              { name: "TVC:UKOIL", displayName: "Pétrole Brent" },
+              { name: "SKILLING:NATGAS", displayName: "Gaz naturel" }
+            ]
+          }
+        ]
+      }
+    };
+
+    function buildMarketQuotesPreset(title, groups) {
+      return {
+        title,
+        scriptSrc: "https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js",
+        creditHref: "https://www.tradingview.com/markets/",
+        creditText: "Résumé du marché",
+        options: {
+          title,
+          width: "100%",
+          height: "100%",
+          locale: LOCALE,
+          showSymbolLogo: true,
+          symbolsGroups: groups,
+          colorTheme: THEME
+        }
+      };
+    }
+
+    const PRESETS = {
+      cryptoList: buildMarketQuotesPreset(ASSETS.crypto.title, ASSETS.crypto.groups),
+      stocksList: buildMarketQuotesPreset(ASSETS.stocks.title, ASSETS.stocks.groups),
+      forexList: buildMarketQuotesPreset(ASSETS.forex.title, ASSETS.forex.groups),
+      indicesList: buildMarketQuotesPreset(ASSETS.indices.title, ASSETS.indices.groups),
+      commoditiesList: buildMarketQuotesPreset(ASSETS.commodities.title, ASSETS.commodities.groups),
+      forexScreener: {
+        title: "Screener — Forex",
+        scriptSrc: "https://s3.tradingview.com/external-embedding/embed-widget-screener.js",
+        creditHref: "https://www.tradingview.com/markets/currencies/",
+        creditText: "Screener Forex",
+        options: {
+          width: "100%",
+          height: "100%",
+          defaultColumn: "overview",
+          defaultScreen: "top_gainers",
+          showToolbar: true,
+          locale: LOCALE,
+          market: "forex",
+          colorTheme: THEME
+        }
+      },
+      cryptoScreener: {
+        title: "Screener — Crypto",
+        scriptSrc: "https://s3.tradingview.com/external-embedding/embed-widget-screener.js",
+        creditHref: "https://www.tradingview.com/crypto-coins-screener/",
+        creditText: "Screener Crypto",
+        options: {
+          width: "100%",
+          height: "100%",
+          defaultColumn: "overview",
+          defaultScreen: "top_gainers",
+          showToolbar: true,
+          locale: LOCALE,
+          market: "crypto",
+          colorTheme: THEME
+        }
+      }
+    };
+
+    function mountWidget(preset) {
+      marketHost.innerHTML = "";
+
+      const container = document.createElement("div");
+      container.className = "tradingview-widget-container";
+      container.style.height = "100%";
+
+      const widget = document.createElement("div");
+      widget.className = "tradingview-widget-container__widget";
+      widget.style.height = "100%";
+
+      const credit = document.createElement("div");
+      credit.className = "tradingview-widget-copyright";
+      credit.innerHTML = `<a href="${preset.creditHref}" rel="noopener nofollow" target="_blank">${preset.creditText}</a><span> — by TradingView</span>`;
+
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src = preset.scriptSrc;
+      script.async = true;
+      script.text = JSON.stringify(preset.options);
+
+      container.appendChild(widget);
+      container.appendChild(credit);
+      container.appendChild(script);
+      marketHost.appendChild(container);
+    }
+
+    function loadPreset(key) {
+      const preset = PRESETS[key] || PRESETS.cryptoList;
+      marketTitle.textContent = preset.title;
+      mountWidget(preset);
+    }
+
+    marketTabs.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-key]");
+      if (!btn) return;
+
+      marketTabs.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      loadPreset(btn.dataset.key);
+    });
+
+    loadPreset("cryptoList");
+  })();
+</script>
 </body>
 </html>
