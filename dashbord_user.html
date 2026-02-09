@@ -1735,102 +1735,63 @@ Mon compte </button>
     const LOCALE = "fr";
     const THEME = "light";
 
-    const ASSETS = {
-      crypto: {
-        title: "Crypto",
-        groups: [
-          {
-            name: "Principales",
-            symbols: [
-              { name: "COINBASE:BTCUSD", displayName: "BTC/USD" },
-              { name: "COINBASE:ETHUSD", displayName: "ETH/USD" },
-              { name: "COINBASE:USDTUSD", displayName: "USDT/USD" },
-              { name: "BINANCE:BNBUSDT", displayName: "BNB/USD" },
-              { name: "BITSTAMP:USDCUSD", displayName: "USDC/USD" },
-              { name: "BINANCE:XRPUSDT", displayName: "XRP/USD" },
-              { name: "BINANCE:ADAUSDT", displayName: "ADA/USD" },
-              { name: "BINANCE:DOGEUSDT", displayName: "DOGE/USD" },
-              { name: "SKILLING:MATICUSD", displayName: "MATIC/USD" },
-              { name: "BINANCE:SOLUSDT", displayName: "SOL/USD" }
-            ]
-          },
-          {
-            name: "Altcoins",
-            symbols: [
-              { name: "BINANCE:DOTUSDT", displayName: "DOT/USD" },
-              { name: "BINANCE:SHIBUSDT", displayName: "SHIB/USD" },
-              { name: "BINANCE:AVAXUSDT", displayName: "AVAX/USD" },
-              { name: "BINANCE:LTCUSDT", displayName: "LTC/USD" },
-              { name: "BINANCE:LINKUSDT", displayName: "LINK/USD" },
-              { name: "BINANCE:UNIUSDT", displayName: "UNI/USD" },
-              { name: "BINANCE:ALGOUSDT", displayName: "ALGO/USD" },
-              { name: "BINANCE:ATOMUSDT", displayName: "ATOM/USD" },
-              { name: "BINANCE:TRXUSDT", displayName: "TRX/USD" },
-              { name: "BINANCE:AAVEUSDT", displayName: "AAVE/USD" }
-            ]
-          }
-        ]
-      },
-      stocks: {
-        title: "Actions",
-        groups: [
-          {
-            name: "US Large / Tech",
-            symbols: [
-              { name: "NASDAQ:AAPL", displayName: "Apple (AAPL)" },
-              { name: "NASDAQ:MSFT", displayName: "Microsoft (MSFT)" },
-              { name: "NASDAQ:AMZN", displayName: "Amazon (AMZN)" },
-              { name: "NASDAQ:TSLA", displayName: "Tesla (TSLA)" },
-              { name: "NASDAQ:NVDA", displayName: "Nvidia (NVDA)" }
-            ]
-          }
-        ]
-      },
-      forex: {
-        title: "Forex",
-        groups: [
-          {
-            name: "Paires majeures",
-            symbols: [
-              { name: "FX_IDC:EURUSD", displayName: "EUR/USD" },
-              { name: "FX_IDC:USDJPY", displayName: "USD/JPY" },
-              { name: "FX_IDC:GBPUSD", displayName: "GBP/USD" },
-              { name: "FX_IDC:USDCHF", displayName: "USD/CHF" },
-              { name: "FX_IDC:USDCAD", displayName: "USD/CAD" }
-            ]
-          }
-        ]
-      },
-      indices: {
-        title: "Indices",
-        groups: [
-          {
-            name: "Principaux indices",
-            symbols: [
-              { name: "FOREXCOM:SPXUSD", displayName: "S&P 500" },
-              { name: "FOREXCOM:DJI", displayName: "Dow Jones" },
-              { name: "FOREXCOM:NSXUSD", displayName: "Nasdaq 100" },
-              { name: "INDEX:DEU40", displayName: "DAX" }
-            ]
-          }
-        ]
-      },
-      commodities: {
-        title: "Matières premières",
-        groups: [
-          {
-            name: "Métaux & Énergie",
-            symbols: [
-              { name: "CMCMARKETS:GOLD", displayName: "Or/USD" },
-              { name: "CMCMARKETS:SILVER", displayName: "Argent/USD" },
-              { name: "TVC:USOIL", displayName: "Pétrole WTI" },
-              { name: "TVC:UKOIL", displayName: "Pétrole Brent" },
-              { name: "SKILLING:NATGAS", displayName: "Gaz naturel" }
-            ]
-          }
-        ]
-      }
-    };
+    function buildAssetsFromCurrencyPairs() {
+      const pairSelect = document.getElementById("currencyPair");
+      if (!pairSelect) return null;
+
+      const groupMap = {
+        crypto: { labels: ["crypto"], fallbackTitle: "Crypto" },
+        stocks: { labels: ["actions", "stocks"], fallbackTitle: "Actions" },
+        forex: { labels: ["forex"], fallbackTitle: "Forex" },
+        indices: { labels: ["indices", "index"], fallbackTitle: "Indices" },
+        commodities: { labels: ["commodities", "matières premières"], fallbackTitle: "Matières premières" }
+      };
+
+      const normalize = (value) =>
+        (value || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim();
+
+      const foundGroups = {};
+
+      Array.from(pairSelect.querySelectorAll("optgroup")).forEach((group) => {
+        const label = group.label || "";
+        const normalizedLabel = normalize(label);
+        const key = Object.keys(groupMap).find((assetKey) =>
+          groupMap[assetKey].labels.some((alias) => normalizedLabel.includes(normalize(alias)))
+        );
+
+        if (!key) return;
+
+        const symbols = Array.from(group.querySelectorAll("option"))
+          .map((option) => {
+            const symbolName = (option.value || "").trim();
+            const displayName = (option.textContent || "").trim();
+            if (!symbolName || !displayName) return null;
+            return { name: symbolName, displayName };
+          })
+          .filter(Boolean);
+
+        if (!symbols.length) return;
+
+        foundGroups[key] = {
+          title: label || groupMap[key].fallbackTitle,
+          groups: [{ name: label || groupMap[key].fallbackTitle, symbols }]
+        };
+      });
+
+      return {
+        crypto: foundGroups.crypto || { title: "Crypto", groups: [] },
+        stocks: foundGroups.stocks || { title: "Actions", groups: [] },
+        forex: foundGroups.forex || { title: "Forex", groups: [] },
+        indices: foundGroups.indices || { title: "Indices", groups: [] },
+        commodities: foundGroups.commodities || { title: "Matières premières", groups: [] }
+      };
+    }
+
+    const ASSETS = buildAssetsFromCurrencyPairs();
 
     function buildMarketQuotesPreset(title, groups) {
       return {
