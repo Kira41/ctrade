@@ -47,7 +47,7 @@ function marketDataTableReady(PDO $pdo): void {
         return;
     }
 
-    $pdo->exec(
+    $createStatements = [
         'CREATE TABLE IF NOT EXISTS market_data_cache (
             pair VARCHAR(64) PRIMARY KEY,
             source VARCHAR(32) NOT NULL,
@@ -64,10 +64,40 @@ function marketDataTableReady(PDO $pdo): void {
             last_fetch_ms INT NULL,
             last_error TEXT NULL,
             INDEX idx_updated_at (updated_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        'CREATE TABLE IF NOT EXISTS market_data_cache (
+            pair VARCHAR(64) PRIMARY KEY,
+            source VARCHAR(32) NOT NULL,
+            payload LONGTEXT NOT NULL,
+            value DECIMAL(30,10) NULL,
+            change_value DECIMAL(30,10) NULL,
+            change_percent DECIMAL(30,10) NULL,
+            open_value DECIMAL(30,10) NULL,
+            high_value DECIMAL(30,10) NULL,
+            low_value DECIMAL(30,10) NULL,
+            previous_value DECIMAL(30,10) NULL,
+            is_stale TINYINT(1) NOT NULL DEFAULT 0,
+            updated_at DATETIME NOT NULL,
+            last_fetch_ms INT NULL,
+            last_error TEXT NULL,
+            INDEX idx_updated_at (updated_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
-    );
+    ];
 
-    $ready = true;
+    $lastError = null;
+    foreach ($createStatements as $statement) {
+        try {
+            $pdo->exec($statement);
+            $ready = true;
+            return;
+        } catch (PDOException $e) {
+            $lastError = $e;
+        }
+    }
+
+    if ($lastError instanceof PDOException) {
+        throw $lastError;
+    }
 }
 
 function parseNumericValue($val): ?float {
