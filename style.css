@@ -412,11 +412,51 @@
 
 #offers .card {
   border-radius: 12px;
+  border: 0;
 }
 
 #offers .card-header {
   padding: 0.65rem 0.85rem;
   font-size: 0.95rem;
+}
+
+#offers .offer-plan-card {
+  background: #0f4fdc;
+  color: #ffffff;
+}
+
+#offers .offer-plan-header {
+  background: transparent;
+  border-bottom: 0;
+  padding: 1.2rem 1.2rem 0.1rem;
+}
+
+#offers .offer-plan-name {
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.4px;
+}
+
+#offers .offer-plan-body {
+  padding: 0.55rem 1.2rem 0.45rem;
+}
+
+#offers .offer-plan-price {
+  color: #f0f6ff;
+  font-size: 1.15rem;
+}
+
+#offers .offer-plan-subtitle {
+  color: #d7e8ff;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  padding-bottom: 0.6rem;
+}
+
+#offers .offer-plan-list {
+  background: transparent;
+  padding-bottom: 0.7rem;
 }
 
 #offers .card-body {
@@ -434,25 +474,32 @@
 }
 
 #offers .list-group-item {
-  padding: 0.48rem 0.85rem;
-  font-size: 0.84rem;
-  line-height: 1.35;
+  background: transparent;
+  color: #f5f9ff;
+  border-color: transparent;
+  padding: 0.34rem 1.2rem;
+  font-size: 0.66rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: flex;
   align-items: flex-start;
   gap: 0.35rem;
 }
 
 #offers .list-group-item i {
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
+  color: #8fd1ff;
   flex-shrink: 0;
 }
 
 @media (max-width: 1399.98px) {
-  #offers .card-header {
-    font-size: 0.92rem;
+  #offers .offer-plan-name {
+    font-size: 1.9rem;
   }
 
-  #offers .display-6 {
-    font-size: 1.45rem;
+  #offers .list-group-item {
+    font-size: 0.62rem;
   }
 }
