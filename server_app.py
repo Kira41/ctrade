@@ -1,216 +1,156 @@
-import re
-import time
-import math
-import threading
-from typing import Optional, Tuple
+from __future__ import annotations
 
-from fastapi import FastAPI, Header, HTTPException, Query
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+import asyncio
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-app = FastAPI()
-
-TE_API_KEY = "te_6XvQpK9jR2mN4sA7fH8uC1zL0wY3tG5eB9nD7kS2pV4qR8m"
-
-PAIR_RE = re.compile(r"^[A-Za-z0-9._:-]+$")  # allow BRK.B etc.
+from fastapi import FastAPI, HTTPException
+from playwright.async_api import async_playwright
 
 
-# ---------------------------
-# Anti-overload limiter (global, in-process)
-# - Max 1 in-flight request
-# - Min interval between accepted requests = 2s
-# ---------------------------
-class GlobalLimiter:
-    def __init__(self, min_interval_sec: float = 2.0, max_in_flight: int = 1):
-        self.min_interval = float(min_interval_sec)
-        self._lock = threading.Lock()
-        self._in_flight = 0
-        self._max_in_flight = int(max_in_flight)
-        self._last_accepted_mono = 0.0
+TARGET_DEFAULT = "/opt/te-api/trading.html"
 
-    def try_acquire(self) -> Tuple[bool, float, str]:
-        """
-        Returns: (ok, retry_after_seconds, reason)
-        """
-        now = time.monotonic()
-        with self._lock:
-            # 1) Concurrency guard
-            if self._in_flight >= self._max_in_flight:
-                return False, 1.0, "busy"
+JS_EXTRACT = r"""
+() => {
+  const rows = Array.from(document.querySelectorAll('div.market-quotes-widget__row--symbol'));
+  return rows.map(row => {
+    const txt = (sel) => {
+      const el = row.querySelector(sel);
+      if (!el) return null;
+      const s = (el.textContent || '').trim();
+      return s === '' ? null : s;
+    };
 
-            # 2) Min-interval guard
-            wait = (self._last_accepted_mono + self.min_interval) - now
-            if wait > 0:
-                return False, wait, "rate_limited"
+    const name = (() => {
+      const a = row.querySelector('.market-quotes-widget__field--name-row-cell a');
+      const s = a ? (a.textContent || '').trim() : null;
+      return s && s !== '' ? s : null;
+    })();
 
-            # accept
-            self._in_flight += 1
-            self._last_accepted_mono = now
-            return True, 0.0, "ok"
+    const value = txt('.js-symbol-last');
+    const change = txt('.js-symbol-change');
 
-    def release(self) -> None:
-        with self._lock:
-            if self._in_flight > 0:
-                self._in_flight -= 1
+    const chgp = (() => {
+      const el = row.querySelector('.js-symbol-change-pt');
+      if (!el) return null;
+      const s = (el.textContent || '').trim();
+      return s === '' ? null : s;
+    })();
 
+    const open = txt('.js-symbol-open');
+    const high = txt('.js-symbol-high');
+    const low  = txt('.js-symbol-low');
+    const prev = txt('.js-symbol-prev-close');
 
-limiter = GlobalLimiter(min_interval_sec=2.0, max_in_flight=1)
+    if (!name && !value) return null;
 
+    return {
+      "Name": name,
+      "Value": value,
+      "Change": change,
+      "Chg%": chgp,
+      "Open": open,
+      "High": high,
+      "Low": low,
+      "Prev": prev
+    };
+  }).filter(Boolean);
+}
+"""
 
-def parse_pair(pair: str) -> Tuple[str, str]:
-    pair = (pair or "").strip()
-    if not pair or not PAIR_RE.match(pair):
-        raise HTTPException(status_code=400, detail="Invalid pair format")
-    if ":" not in pair:
-        raise HTTPException(status_code=400, detail='pair must be like "EXCHANGE:SYMBOL"')
-    ex, sym = pair.split(":", 1)
-    ex = ex.strip().upper()
-    sym = sym.strip().upper()
-    if not ex or not sym:
-        raise HTTPException(status_code=400, detail="Invalid EXCHANGE or SYMBOL")
-    return ex, sym
+def to_url(target: str) -> str:
+    target = target.strip()
+    if "://" in target:
+        return target
+    p = Path(target)
+    if not p.exists():
+        raise FileNotFoundError(target)
+    return p.resolve().as_uri()
 
+async def wait_until_data_ready(page, timeout_ms: int = 15000, poll_ms: int = 150) -> bool:
+    deadline = asyncio.get_running_loop().time() + (timeout_ms / 1000.0)
+    while asyncio.get_running_loop().time() < deadline:
+        for fr in page.frames:
+            try:
+                el = await fr.query_selector("div.market-quotes-widget__row--symbol .js-symbol-last")
+                if not el:
+                    continue
+                txt = (await el.inner_text() or "").strip()
+                if txt:
+                    return True
+            except Exception:
+                pass
+        await asyncio.sleep(poll_ms / 1000.0)
+    return False
 
-def build_urls(exchange: str, symbol: str):
-    u1 = f"https://www.tradingview.com/symbols/{symbol}/?exchange={exchange}"
-    u2 = f"https://www.tradingview.com/symbols/{exchange}-{symbol}/"
-    return [u1, u2]
-
-
-@app.get("/tv/quote")
-def tv_quote(
-    currencyPair: Optional[str] = Query(default=None, description='Example: COINBASE:BTCUSD'),
-    pair: Optional[str] = Query(default=None, description='Alias of currencyPair'),
-    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
-):
-    # --- auth ---
-    if x_api_key != TE_API_KEY:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    pair_val = currencyPair or pair
-    if not pair_val:
-        raise HTTPException(status_code=400, detail="Missing currencyPair (or pair)")
-
-    # --- anti-overload ---
-    ok, retry_after, reason = limiter.try_acquire()
-    if not ok:
-        # Retry-After header (useful for clients)
-        retry_int = max(1, int(math.ceil(retry_after)))
-        msg = "Server busy, try again shortly." if reason == "busy" else "Too many requests, slow down."
-        raise HTTPException(
-            status_code=429,
-            detail=f"{msg} Retry after ~{retry_int}s",
-            headers={"Retry-After": str(retry_int)},
+def dedup(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen: set = set()
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        key: Tuple[Any, ...] = (
+            r.get("Name"), r.get("Value"), r.get("Change"), r.get("Chg%"),
+            r.get("Open"), r.get("High"), r.get("Low"), r.get("Prev")
         )
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
 
-    started = time.time()
-    browser = None
-    context = None
-    page = None
+class State:
+    def __init__(self):
+        self.pw = None
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.lock = asyncio.Lock()
+        self.target_url = None
+
+state = State()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    state.pw = await async_playwright().start()
+    state.browser = await state.pw.chromium.launch(headless=True)
+    state.context = await state.browser.new_context()
+
+    state.target_url = to_url(TARGET_DEFAULT)
+    state.page = await state.context.new_page()
+    await state.page.goto(state.target_url, wait_until="load", timeout=60000)
+
+    yield
 
     try:
-        exchange, symbol = parse_pair(pair_val)
-        urls = build_urls(exchange, symbol)
-
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                ],
-            )
-
-            context = browser.new_context(
-                user_agent=(
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                )
-            )
-            page = context.new_page()
-
-            # Speed: block heavy resources
-            def route_handler(route):
-                rt = route.request.resource_type
-                if rt in ("image", "font", "media"):
-                    return route.abort()
-                return route.continue_()
-
-            page.route("**/*", route_handler)
-
-            def extract_values(timeout_ms: int = 20_000):
-                # last value
-                last_el = page.wait_for_selector('[data-qa-id="symbol-last-value"]', timeout=timeout_ms)
-                market_last = (last_el.inner_text() or "").strip() or None
-
-                # change percent: first element only
-                page.wait_for_selector(".js-symbol-change-pt", timeout=timeout_ms)
-                els = page.query_selector_all(".js-symbol-change-pt")
-                market_daily_Pchg = None
-                if els:
-                    market_daily_Pchg = (els[0].inner_text() or "").strip() or None
-
-                return market_last, market_daily_Pchg
-
-            last_err = None
-
-            for url in urls:
-                try:
-                    page.goto(url, wait_until="domcontentloaded", timeout=60_000)
-                    page.wait_for_timeout(800)  # small wait for TradingView dynamic render
-
-                    market_last, market_daily_Pchg = extract_values()
-
-                    missing = []
-                    if market_last is None:
-                        missing.append("market_last")
-                    if market_daily_Pchg is None:
-                        missing.append("market_daily_Pchg")
-
-                    if market_last is None:
-                        last_err = f"Required element [data-qa-id='symbol-last-value'] not found on {url}"
-                        continue
-
-                    return {
-                        "ok": True,
-                        "pair": f"{exchange}:{symbol}",
-                        "exchange": exchange,
-                        "symbol": symbol,
-                        "url": url,
-                        "market_last": market_last,
-                        "market_daily_Pchg": market_daily_Pchg,
-                        "missing": missing,
-                        "took_ms": int((time.time() - started) * 1000),
-                    }
-
-                except PlaywrightTimeoutError as e:
-                    last_err = f"Timeout on {url}: {type(e).__name__}: {str(e)}"
-                except Exception as e:
-                    last_err = f"Error on {url}: {type(e).__name__}: {str(e)}"
-
-            return {
-                "ok": False,
-                "pair": f"{exchange}:{symbol}",
-                "error": last_err or "Failed to extract values",
-                "took_ms": int((time.time() - started) * 1000),
-            }
-
+        if state.browser:
+            await state.browser.close()
     finally:
-        # Close in correct order to free resources
-        try:
-            if page:
-                page.close()
-        except Exception:
-            pass
-        try:
-            if context:
-                context.close()
-        except Exception:
-            pass
-        try:
-            if browser:
-                browser.close()
-        except Exception:
-            pass
+        if state.pw:
+            await state.pw.stop()
 
-        limiter.release()
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/health")
+async def health():
+    return {"ok": True, "target_url": state.target_url}
+
+@app.get("/quotes")
+async def quotes(ready_timeout_ms: int = 15000, poll_ms: int = 150):
+    async with state.lock:
+        if not state.page:
+            raise HTTPException(500, "Browser not initialized")
+
+        ok = await wait_until_data_ready(state.page, timeout_ms=ready_timeout_ms, poll_ms=poll_ms)
+        if not ok:
+            raise HTTPException(504, "Timed out waiting for iframe data")
+
+        rows: List[Dict[str, Any]] = []
+        for fr in state.page.frames:
+            try:
+                data = await fr.evaluate(JS_EXTRACT)
+                if data and isinstance(data, list):
+                    rows.extend(data)
+            except Exception:
+                pass
+
+        return {"ok": True, "rows": dedup(rows)}
