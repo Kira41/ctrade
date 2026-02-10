@@ -29,6 +29,10 @@ let selectedPairText = $('#currencyPair option:selected').text();
 let selectedChartTheme = $('#chartTheme').val() || 'light';
 let priceInterval = null;
 let priceFetchController = null;
+let quotesSnapshotCache = null;
+let quotesSnapshotFetchedAt = 0;
+let quotesSnapshotRequest = null;
+const QUOTES_SNAPSHOT_TTL_MS = 1500;
 
 // TradingView symbol mapping aligned with the currencyPair options.
 const TV_SYMBOL_MAP = {
@@ -243,6 +247,30 @@ function findQuoteRow(rows, pair, label = '') {
     }
 
     return null;
+}
+
+async function getQuotesSnapshot({ force = false } = {}) {
+    const now = Date.now();
+    if (!force && quotesSnapshotCache && (now - quotesSnapshotFetchedAt) < QUOTES_SNAPSHOT_TTL_MS) {
+        return quotesSnapshotCache;
+    }
+
+    if (quotesSnapshotRequest) {
+        return quotesSnapshotRequest;
+    }
+
+    quotesSnapshotRequest = fetch('php/quotes_client.php')
+        .then(r => r.json())
+        .then(info => {
+            quotesSnapshotCache = info;
+            quotesSnapshotFetchedAt = Date.now();
+            return info;
+        })
+        .finally(() => {
+            quotesSnapshotRequest = null;
+        });
+
+    return quotesSnapshotRequest;
 }
 
 function formatDollar(num) {
@@ -1699,8 +1727,7 @@ function initializeUI() {
         priceFetchController = new AbortController();
         const fetchFor = pair;
         currentPricePair = pair;
-        fetch('php/quotes_client.php', { signal: priceFetchController.signal })
-            .then(r => r.json())
+        getQuotesSnapshot({ force: true })
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
                 const row = findQuoteRow(info.rows || [], fetchFor, selectedPairText);
@@ -1722,28 +1749,20 @@ function initializeUI() {
             });
     }
 
-    async function fetchCurrentPrice(pair) {
-        try {
-            const resp = await fetch('php/quotes_client.php');
-            const info = await resp.json();
-            const row = findQuoteRow(info.rows || [], pair, pair);
-            return row ? parseMarketNumber(row.Value) : NaN;
-        } catch (e) {
-            return NaN;
-        }
-    }
-
     async function updateOpenTradeProfits(trades) {
         // Ensure only trades without fixed profit are processed
         trades = trades.filter(t => t.profitPerte == null);
+        if (!trades.length) return;
+
+        const info = await getQuotesSnapshot();
+        const rows = info.rows || [];
         const uniquePairs = {};
         for (const t of trades) {
-            uniquePairs[t.paireDevises] = null;
+            if (uniquePairs[t.paireDevises] != null) continue;
+            const row = findQuoteRow(rows, t.paireDevises, t.paireDevises);
+            uniquePairs[t.paireDevises] = row ? parseMarketNumber(row.Value) : NaN;
         }
-        // Fetch prices for each unique pair
-        await Promise.all(Object.keys(uniquePairs).map(async p => {
-            uniquePairs[p] = await fetchCurrentPrice(p);
-        }));
+
         trades.forEach(t => {
             const curPrice = uniquePairs[t.paireDevises];
             if (isNaN(curPrice)) return;
