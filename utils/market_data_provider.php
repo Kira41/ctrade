@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../config/db_connection.php';
 require_once __DIR__ . '/quotes_client_lib.php';
 
+const MARKET_DATA_SNAPSHOT_PAIR = '__SNAPSHOT__';
+
 function normalizeMarketPair(?string $rawPair): string {
     $decoded = urldecode((string)($rawPair ?? ''));
     $pair = strtoupper(trim($decoded));
@@ -220,6 +222,87 @@ function fetchCommodityUpstream(string $pair): array {
     ];
 }
 
+function readQuotesSnapshotCache(PDO $pdo): ?array {
+    $stmt = $pdo->prepare('SELECT payload, updated_at, is_stale FROM market_data_cache WHERE pair = ? LIMIT 1');
+    $stmt->execute([MARKET_DATA_SNAPSHOT_PAIR]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        return null;
+    }
+
+    $payload = json_decode((string)$row['payload'], true);
+    if (!is_array($payload)) {
+        return null;
+    }
+
+    $payload['updated_at'] = $row['updated_at'];
+    $payload['is_stale'] = (bool)$row['is_stale'];
+    return $payload;
+}
+
+function upsertQuotesSnapshotCache(PDO $pdo, array $payload, bool $isStale, ?int $fetchMs, ?string $lastError): void {
+    $stmt = $pdo->prepare(
+        'INSERT INTO market_data_cache (pair, source, payload, is_stale, updated_at, last_fetch_ms, last_error)
+         VALUES (?, "quotes_client", ?, ?, NOW(), ?, ?)
+         ON DUPLICATE KEY UPDATE
+            source = VALUES(source),
+            payload = VALUES(payload),
+            is_stale = VALUES(is_stale),
+            updated_at = VALUES(updated_at),
+            last_fetch_ms = VALUES(last_fetch_ms),
+            last_error = VALUES(last_error)'
+    );
+
+    $stmt->execute([
+        MARKET_DATA_SNAPSHOT_PAIR,
+        json_encode($payload, JSON_UNESCAPED_UNICODE),
+        $isStale ? 1 : 0,
+        $fetchMs,
+        $lastError,
+    ]);
+}
+
+function refreshQuotesSnapshot(PDO $pdo): array {
+    $quotesPayload = quotesClientFetchPayload();
+    if (!empty($quotesPayload['ok'])) {
+        upsertQuotesSnapshotCache($pdo, $quotesPayload, false, $quotesPayload['took_ms'] ?? null, null);
+        $quotesPayload['updated_at'] = date('Y-m-d H:i:s');
+        return $quotesPayload;
+    }
+
+    $errorDetail = json_encode($quotesPayload, JSON_UNESCAPED_UNICODE);
+    $cached = readQuotesSnapshotCache($pdo);
+    if ($cached) {
+        $cached['ok'] = true;
+        $cached['is_stale'] = true;
+        upsertQuotesSnapshotCache($pdo, $cached, true, $quotesPayload['took_ms'] ?? null, $errorDetail);
+        return $cached;
+    }
+
+    return [
+        'ok' => false,
+        'is_stale' => true,
+        'error' => 'quotes_client_failure',
+        'detail' => $quotesPayload,
+    ];
+}
+
+function findPairRowInSnapshot(?array $snapshot, string $pair): ?array {
+    if (!is_array($snapshot)) {
+        return null;
+    }
+
+    $rows = is_array($snapshot['rows'] ?? null) ? $snapshot['rows'] : [];
+    foreach (marketPairCandidateNames($pair) as $candidate) {
+        $row = quotesClientFindRowByPairName($rows, $candidate);
+        if ($row !== null) {
+            return $row;
+        }
+    }
+
+    return null;
+}
+
 function readCachedMarketData(PDO $pdo, string $pair): ?array {
     $stmt = $pdo->prepare('SELECT pair, payload, updated_at, is_stale FROM market_data_cache WHERE pair = ? LIMIT 1');
     $stmt->execute([$pair]);
@@ -373,60 +456,47 @@ function getMarketData(string $inputPair, float $ttlSeconds = 2.0): array {
 
     marketDataTableReady($pdo);
 
-    $cache = readCachedMarketData($pdo, $pair);
-    if (marketCacheFreshEnough($cache, $ttlSeconds)) {
-        error_log(json_encode(['event' => 'market_cache_hit', 'pair' => $pair, 'ttl_seconds' => $ttlSeconds]));
-        return $cache;
+    $snapshot = readQuotesSnapshotCache($pdo);
+    $row = findPairRowInSnapshot($snapshot, $pair);
+    if ($row && marketCacheFreshEnough($snapshot, $ttlSeconds)) {
+        $payload = normalizeCommodityPayload($pair, $row, false);
+        $payload['updated_at'] = $snapshot['updated_at'];
+        return $payload;
     }
 
-    $lockName = 'market_data_refresh_' . preg_replace('/[^A-Z0-9_]/', '_', $pair);
+    $lockName = 'market_data_snapshot_refresh';
     $lockStmt = $pdo->prepare('SELECT GET_LOCK(?, 3)');
     $lockStmt->execute([$lockName]);
     $lockAcquired = ((int)$lockStmt->fetchColumn()) === 1;
 
     if (!$lockAcquired) {
         error_log(json_encode(['event' => 'market_lock_wait_timeout', 'pair' => $pair]));
-        if ($cache) {
-            $cache['is_stale'] = true;
-            return $cache;
+        if ($row) {
+            $payload = normalizeCommodityPayload($pair, $row, true);
+            $payload['updated_at'] = $snapshot['updated_at'] ?? date('Y-m-d H:i:s');
+            return $payload;
         }
         return ['ok' => false, 'pair' => $pair, 'error' => 'Could not acquire refresh lock', 'is_stale' => true];
     }
 
     try {
-        $cacheAfterLock = readCachedMarketData($pdo, $pair);
-        if (marketCacheFreshEnough($cacheAfterLock, $ttlSeconds)) {
-            error_log(json_encode(['event' => 'market_cache_hit_after_lock', 'pair' => $pair]));
-            return $cacheAfterLock;
-        }
-
-        $upstream = fetchCommodityUpstream($pair);
-        if (!empty($upstream['ok'])) {
-            $payload = normalizeCommodityPayload($pair, $upstream['data'], false);
-            upsertMarketCache($pdo, $pair, $payload, false, $upstream['took_ms'] ?? null, null);
-            $payload['updated_at'] = date('Y-m-d H:i:s');
-            error_log(json_encode(['event' => 'market_refresh_success', 'pair' => $pair, 'fetch_ms' => $upstream['took_ms'] ?? null]));
+        $snapshotAfterLock = readQuotesSnapshotCache($pdo);
+        $rowAfterLock = findPairRowInSnapshot($snapshotAfterLock, $pair);
+        if ($rowAfterLock && marketCacheFreshEnough($snapshotAfterLock, $ttlSeconds)) {
+            $payload = normalizeCommodityPayload($pair, $rowAfterLock, false);
+            $payload['updated_at'] = $snapshotAfterLock['updated_at'];
             return $payload;
         }
 
-        $errorDetail = json_encode($upstream, JSON_UNESCAPED_UNICODE);
-        error_log(json_encode(['event' => 'market_refresh_failed', 'pair' => $pair, 'detail' => $upstream]));
-
-        if ($cacheAfterLock) {
-            $cacheAfterLock['ok'] = true;
-            $cacheAfterLock['is_stale'] = true;
-            upsertMarketCache($pdo, $pair, $cacheAfterLock, true, $upstream['took_ms'] ?? null, $errorDetail);
-            return $cacheAfterLock;
+        $refreshedSnapshot = refreshQuotesSnapshot($pdo);
+        $refreshedRow = findPairRowInSnapshot($refreshedSnapshot, $pair);
+        if ($refreshedRow) {
+            $payload = normalizeCommodityPayload($pair, $refreshedRow, !empty($refreshedSnapshot['is_stale']));
+            $payload['updated_at'] = $refreshedSnapshot['updated_at'] ?? date('Y-m-d H:i:s');
+            return $payload;
         }
 
-        return [
-            'ok' => false,
-            'pair' => $pair,
-            'source' => 'quotes_client',
-            'is_stale' => true,
-            'error' => 'Unable to refresh market data and no cache available',
-            'detail' => $upstream,
-        ];
+        return ['ok' => false, 'pair' => $pair, 'is_stale' => true, 'error' => 'Pair not found in snapshot cache'];
     } finally {
         $releaseStmt = $pdo->prepare('SELECT RELEASE_LOCK(?)');
         $releaseStmt->execute([$lockName]);

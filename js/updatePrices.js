@@ -259,7 +259,7 @@ async function getQuotesSnapshot({ force = false } = {}) {
         return quotesSnapshotRequest;
     }
 
-    quotesSnapshotRequest = fetch('php/quotes_client.php')
+    quotesSnapshotRequest = fetch('php/market_snapshot.php')
         .then(r => r.json())
         .then(info => {
             quotesSnapshotCache = info;
