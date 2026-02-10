@@ -249,7 +249,7 @@ function findQuoteRow(rows, pair, label = '') {
     return null;
 }
 
-async function getQuotesSnapshot({ force = false } = {}) {
+async function getQuotesSnapshot({ force = false, signal } = {}) {
     const now = Date.now();
     if (!force && quotesSnapshotCache && (now - quotesSnapshotFetchedAt) < QUOTES_SNAPSHOT_TTL_MS) {
         return quotesSnapshotCache;
@@ -259,7 +259,7 @@ async function getQuotesSnapshot({ force = false } = {}) {
         return quotesSnapshotRequest;
     }
 
-    quotesSnapshotRequest = fetch('php/market_snapshot.php')
+    quotesSnapshotRequest = fetch('php/market_snapshot.php', { signal })
         .then(r => r.json())
         .then(info => {
             quotesSnapshotCache = info;
@@ -1721,13 +1721,12 @@ function initializeUI() {
 
     function fetchPrice(pair, { force = false } = {}) {
         if (priceFetchController) {
-            if (!force && currentPricePair === pair) return;
             priceFetchController.abort();
         }
         priceFetchController = new AbortController();
         const fetchFor = pair;
         currentPricePair = pair;
-        getQuotesSnapshot({ force: true })
+        getQuotesSnapshot({ force: true, signal: priceFetchController.signal })
             .then(info => {
                 if (currentPricePair !== fetchFor) return;
                 const row = findQuoteRow(info.rows || [], fetchFor, selectedPairText);
@@ -1739,6 +1738,8 @@ function initializeUI() {
             .catch(err => {
                 if (err.name === 'AbortError') return;
                 if (currentPricePair !== fetchFor) return;
+                currentPrice = NaN;
+                priceChange = NaN;
                 $('#currentPrice').text('N/A');
                 $('#priceChange').text('-');
             })
