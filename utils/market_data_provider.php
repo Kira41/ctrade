@@ -312,6 +312,51 @@ function refreshQuotesSnapshot(PDO $pdo): array {
     ];
 }
 
+/**
+ * Return snapshot rows from market_data_cache and auto-refresh when stale.
+ * This is the single source of truth for bulk prices used by controllers.
+ */
+function getQuotesSnapshotData(PDO $pdo, float $ttlSeconds = 1.0, bool $forceRefresh = false): array {
+    marketDataTableReady($pdo);
+
+    $snapshot = readQuotesSnapshotCache($pdo);
+    if (!$forceRefresh && $snapshot && marketCacheFreshEnough($snapshot, $ttlSeconds)) {
+        return $snapshot;
+    }
+
+    $lockName = 'market_data_snapshot_refresh';
+    $lockStmt = $pdo->prepare('SELECT GET_LOCK(?, 3)');
+    $lockStmt->execute([$lockName]);
+    $lockAcquired = ((int)$lockStmt->fetchColumn()) === 1;
+
+    if (!$lockAcquired) {
+        if ($snapshot) {
+            $snapshot['ok'] = true;
+            $snapshot['is_stale'] = true;
+            return $snapshot;
+        }
+        return [
+            'ok' => false,
+            'error' => 'Could not acquire refresh lock',
+            'rows' => [],
+            'is_stale' => true,
+        ];
+    }
+
+    try {
+        // Re-check under lock to avoid duplicate upstream calls.
+        $snapshotAfterLock = readQuotesSnapshotCache($pdo);
+        if (!$forceRefresh && $snapshotAfterLock && marketCacheFreshEnough($snapshotAfterLock, $ttlSeconds)) {
+            return $snapshotAfterLock;
+        }
+
+        return refreshQuotesSnapshot($pdo);
+    } finally {
+        $releaseStmt = $pdo->prepare('SELECT RELEASE_LOCK(?)');
+        $releaseStmt->execute([$lockName]);
+    }
+}
+
 function findPairRowInSnapshot(?array $snapshot, string $pair): ?array {
     if (!is_array($snapshot)) {
         return null;
@@ -479,53 +524,24 @@ function getMarketData(string $inputPair, float $ttlSeconds = 2.0): array {
         return getMarketDataWithFileCache($pair, $ttlSeconds);
     }
 
-    marketDataTableReady($pdo);
-
-    $snapshot = readQuotesSnapshotCache($pdo);
+    $snapshot = getQuotesSnapshotData($pdo, $ttlSeconds, false);
     $row = findPairRowInSnapshot($snapshot, $pair);
-    if ($row && marketCacheFreshEnough($snapshot, $ttlSeconds)) {
+    if ($row) {
         $payload = normalizeCommodityPayload($pair, $row, false);
-        $payload['updated_at'] = $snapshot['updated_at'];
+        $payload['updated_at'] = $snapshot['updated_at'] ?? date('Y-m-d H:i:s');
         return $payload;
     }
 
-    $lockName = 'market_data_snapshot_refresh';
-    $lockStmt = $pdo->prepare('SELECT GET_LOCK(?, 3)');
-    $lockStmt->execute([$lockName]);
-    $lockAcquired = ((int)$lockStmt->fetchColumn()) === 1;
-
-    if (!$lockAcquired) {
-        error_log(json_encode(['event' => 'market_lock_wait_timeout', 'pair' => $pair]));
-        if ($row) {
-            $payload = normalizeCommodityPayload($pair, $row, true);
-            $payload['updated_at'] = $snapshot['updated_at'] ?? date('Y-m-d H:i:s');
-            return $payload;
-        }
-        return ['ok' => false, 'pair' => $pair, 'error' => 'Could not acquire refresh lock', 'is_stale' => true];
+    // Pair may be missing from current snapshot (new symbol), force one refresh.
+    $refreshedSnapshot = getQuotesSnapshotData($pdo, $ttlSeconds, true);
+    $refreshedRow = findPairRowInSnapshot($refreshedSnapshot, $pair);
+    if ($refreshedRow) {
+        $payload = normalizeCommodityPayload($pair, $refreshedRow, !empty($refreshedSnapshot['is_stale']));
+        $payload['updated_at'] = $refreshedSnapshot['updated_at'] ?? date('Y-m-d H:i:s');
+        return $payload;
     }
 
-    try {
-        $snapshotAfterLock = readQuotesSnapshotCache($pdo);
-        $rowAfterLock = findPairRowInSnapshot($snapshotAfterLock, $pair);
-        if ($rowAfterLock && marketCacheFreshEnough($snapshotAfterLock, $ttlSeconds)) {
-            $payload = normalizeCommodityPayload($pair, $rowAfterLock, false);
-            $payload['updated_at'] = $snapshotAfterLock['updated_at'];
-            return $payload;
-        }
-
-        $refreshedSnapshot = refreshQuotesSnapshot($pdo);
-        $refreshedRow = findPairRowInSnapshot($refreshedSnapshot, $pair);
-        if ($refreshedRow) {
-            $payload = normalizeCommodityPayload($pair, $refreshedRow, !empty($refreshedSnapshot['is_stale']));
-            $payload['updated_at'] = $refreshedSnapshot['updated_at'] ?? date('Y-m-d H:i:s');
-            return $payload;
-        }
-
-        return ['ok' => false, 'pair' => $pair, 'is_stale' => true, 'error' => 'Pair not found in snapshot cache'];
-    } finally {
-        $releaseStmt = $pdo->prepare('SELECT RELEASE_LOCK(?)');
-        $releaseStmt->execute([$lockName]);
-    }
+    return ['ok' => false, 'pair' => $pair, 'is_stale' => true, 'error' => 'Pair not found in snapshot cache'];
 }
 
 function getMarketPrice(string $inputPair, float $ttlSeconds = 2.0): float {

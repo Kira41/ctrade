@@ -7,21 +7,16 @@ require_once __DIR__ . '/../utils/market_data_provider.php';
 
 try {
     $pdo = db();
-    marketDataTableReady($pdo);
+    $force = isset($_GET['force']) && (string)$_GET['force'] === '1';
 
-    $snapshot = readQuotesSnapshotCache($pdo);
-    if (!is_array($snapshot)) {
-        http_response_code(503);
-        echo json_encode([
-            'ok' => false,
-            'error' => 'snapshot_cache_empty',
-            'rows' => [],
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        exit;
-    }
-
+    // Auto setter behavior on read: refresh stale/missing snapshot automatically.
+    $snapshot = getQuotesSnapshotData($pdo, 1.0, $force);
     $snapshot['ok'] = !empty($snapshot['ok']);
     $snapshot['rows'] = is_array($snapshot['rows'] ?? null) ? $snapshot['rows'] : [];
+
+    if (empty($snapshot['ok'])) {
+        http_response_code(503);
+    }
 
     echo json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (Throwable $e) {
