@@ -266,7 +266,32 @@ function refreshQuotesSnapshot(PDO $pdo): array {
     $quotesPayload = quotesClientFetchPayload();
     if (!empty($quotesPayload['ok'])) {
         upsertQuotesSnapshotCache($pdo, $quotesPayload, false, $quotesPayload['took_ms'] ?? null, null);
+
+        $updatedPairs = 0;
+        $seenPairs = [];
+        foreach (($quotesPayload['rows'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $rawName = trim((string)($row['Name'] ?? ($row['name'] ?? '')));
+            if ($rawName === '') {
+                continue;
+            }
+
+            $pair = normalizeMarketPair($rawName);
+            if ($pair === '' || isset($seenPairs[$pair])) {
+                continue;
+            }
+            $seenPairs[$pair] = true;
+
+            $normalized = normalizeCommodityPayload($pair, $row, false);
+            upsertMarketCache($pdo, $pair, $normalized, false, $quotesPayload['took_ms'] ?? null, null);
+            $updatedPairs++;
+        }
+
         $quotesPayload['updated_at'] = date('Y-m-d H:i:s');
+        $quotesPayload['cache_pairs_updated'] = $updatedPairs;
         return $quotesPayload;
     }
 
