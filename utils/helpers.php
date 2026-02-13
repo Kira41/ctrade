@@ -49,29 +49,53 @@ function getPairSnapshot(string $pair, ?string $marketSymbol = null): ?array {
         return null;
     }
 
-    $payload = quotesClientFetchPayload();
-    if (empty($payload['ok'])) {
+    try {
+        $pdo = db();
+        $snapshot = getQuotesSnapshotData($pdo, 1.0, false);
+        $rows = is_array($snapshot['rows'] ?? null) ? $snapshot['rows'] : [];
+
+        foreach ($candidates as $candidate) {
+            $row = quotesClientFindRowByPairName($rows, $candidate);
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $price = parseNumericValue($row['Value'] ?? null);
+            if ($price === null) {
+                continue;
+            }
+
+            return [
+                'name' => (string)($row['Name'] ?? $candidate),
+                'value' => (float)$price,
+                'changePercent' => parseNumericValue($row['Chg%'] ?? null),
+                'upstream' => $row,
+            ];
+        }
+
+        // Retry once with forced refresh for newly listed pairs.
+        $snapshot = getQuotesSnapshotData($pdo, 1.0, true);
+        $rows = is_array($snapshot['rows'] ?? null) ? $snapshot['rows'] : [];
+        foreach ($candidates as $candidate) {
+            $row = quotesClientFindRowByPairName($rows, $candidate);
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $price = parseNumericValue($row['Value'] ?? null);
+            if ($price === null) {
+                continue;
+            }
+
+            return [
+                'name' => (string)($row['Name'] ?? $candidate),
+                'value' => (float)$price,
+                'changePercent' => parseNumericValue($row['Chg%'] ?? null),
+                'upstream' => $row,
+            ];
+        }
+    } catch (Throwable $e) {
         return null;
-    }
-
-    $rows = is_array($payload['rows'] ?? null) ? $payload['rows'] : [];
-    foreach ($candidates as $candidate) {
-        $row = quotesClientFindRowByPairName($rows, $candidate);
-        if (!is_array($row)) {
-            continue;
-        }
-
-        $price = parseNumericValue($row['Value'] ?? null);
-        if ($price === null) {
-            continue;
-        }
-
-        return [
-            'name' => (string)($row['Name'] ?? $candidate),
-            'value' => (float)$price,
-            'changePercent' => parseNumericValue($row['Chg%'] ?? null),
-            'upstream' => $row,
-        ];
     }
 
     return null;
